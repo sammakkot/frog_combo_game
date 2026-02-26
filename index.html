@@ -1,0 +1,3295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Frog Rescue Combo Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #4A90A4 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 12px;
+            gap: 16px;
+        }
+
+        .game-wrapper {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            width: min(1200px, 100%);
+        }
+
+        .game-container {
+            position: relative;
+            width: 84vmin;
+            height: 84vmin;
+            max-width: 680px;
+            max-height: 680px;
+            background: radial-gradient(circle, #2E8B57 0%, #1a5c3a 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .daily-game-count {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            z-index: 40;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.72);
+            letter-spacing: 0.2px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .pond {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 2%;
+            padding: 5%;
+            touch-action: none;
+        }
+
+        .lily-pad {
+            position: relative;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f7b3c8, #e06a9f);
+            transition: transform 0.1s linear, background 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center;
+            overflow: hidden;
+            /* Flower-like edge via mask (petal silhouette) */
+            -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='32' fill='white'/><circle cx='82' cy='50' r='16' fill='white'/><circle cx='77.7' cy='66' r='16' fill='white'/><circle cx='66' cy='77.7' r='16' fill='white'/><circle cx='50' cy='82' r='16' fill='white'/><circle cx='34' cy='77.7' r='16' fill='white'/><circle cx='22.3' cy='66' r='16' fill='white'/><circle cx='18' cy='50' r='16' fill='white'/><circle cx='22.3' cy='34' r='16' fill='white'/><circle cx='34' cy='22.3' r='16' fill='white'/><circle cx='50' cy='18' r='16' fill='white'/><circle cx='66' cy='22.3' r='16' fill='white'/><circle cx='77.7' cy='34' r='16' fill='white'/></svg>");
+            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='32' fill='white'/><circle cx='82' cy='50' r='16' fill='white'/><circle cx='77.7' cy='66' r='16' fill='white'/><circle cx='66' cy='77.7' r='16' fill='white'/><circle cx='50' cy='82' r='16' fill='white'/><circle cx='34' cy='77.7' r='16' fill='white'/><circle cx='22.3' cy='66' r='16' fill='white'/><circle cx='18' cy='50' r='16' fill='white'/><circle cx='22.3' cy='34' r='16' fill='white'/><circle cx='34' cy='22.3' r='16' fill='white'/><circle cx='50' cy='18' r='16' fill='white'/><circle cx='66' cy='22.3' r='16' fill='white'/><circle cx='77.7' cy='34' r='16' fill='white'/></svg>");
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+
+        .lily-pad.warning {
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #cc0000);
+        }
+
+        .lily-pad::before {
+            content: '';
+            display: none;
+        }
+
+        .lily-pad.gone {
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .lily-pad.occupied-item .equation-text {
+            display: none !important;
+        }
+
+        .equation-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(10px, 2.1vmin, 16px);
+            font-weight: 700;
+            color: #10203a;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            z-index: 5;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .level-banner {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2f5f1f;
+        }
+
+        .level-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 260;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.45);
+            text-align: center;
+        }
+
+        .level-overlay.show {
+            display: flex;
+        }
+
+        .level-overlay-card {
+            width: min(90%, 420px);
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 14px;
+            padding: 20px 18px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+            color: #1d2b38;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .overlay-ok-btn {
+            margin-top: 12px;
+            background: #1e88e5;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .overlay-choice-btn {
+            margin-top: 12px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .overlay-choice-btn.primary {
+            background: #228b22;
+        }
+
+        .overlay-choice-btn.secondary {
+            background: #546e7a;
+            margin-left: 8px;
+        }
+
+        .wrap-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            z-index: 6;
+            opacity: 0.95;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85));
+        }
+
+        .wrap-arrow.up {
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 11px solid rgba(255, 255, 255, 0.95);
+        }
+
+        .wrap-arrow.down {
+            bottom: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 11px solid rgba(255, 255, 255, 0.95);
+        }
+
+        .wrap-arrow.left {
+            left: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-right: 11px solid rgba(255, 255, 255, 0.95);
+        }
+
+        .wrap-arrow.right {
+            right: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-left: 11px solid rgba(255, 255, 255, 0.95);
+        }
+
+        .frog {
+            position: absolute;
+            width: 80%;
+            height: 65%;
+            background: none;
+            border-radius: 50% 50% 45% 45%;
+            transition: all 0.2s ease;
+            z-index: 10;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+        }
+
+        .frog.invincible {
+            animation: invincibleGlow 0.6s linear infinite;
+            filter:
+                drop-shadow(0 0 10px rgba(255, 0, 80, 1))
+                drop-shadow(0 0 16px rgba(255, 165, 0, 1))
+                drop-shadow(0 0 24px rgba(50, 240, 120, 0.95))
+                drop-shadow(0 0 32px rgba(0, 200, 255, 0.95))
+                drop-shadow(0 0 42px rgba(170, 100, 255, 0.85));
+        }
+
+        .frog.invincible img {
+            filter:
+                saturate(1.35)
+                brightness(1.2)
+                drop-shadow(0 0 12px rgba(255, 255, 255, 0.9));
+        }
+
+        @keyframes invincibleGlow {
+            0% {
+                transform: scale(1);
+                filter:
+                    hue-rotate(0deg)
+                    drop-shadow(0 0 8px rgba(255, 80, 80, 0.95))
+                    drop-shadow(0 0 16px rgba(255, 190, 70, 0.9))
+                    drop-shadow(0 0 24px rgba(90, 230, 130, 0.85))
+                    drop-shadow(0 0 34px rgba(90, 150, 255, 0.8));
+            }
+            50% {
+                transform: scale(1.1);
+                filter:
+                    hue-rotate(120deg)
+                    drop-shadow(0 0 10px rgba(255, 80, 220, 1))
+                    drop-shadow(0 0 20px rgba(120, 220, 255, 1))
+                    drop-shadow(0 0 30px rgba(170, 120, 255, 0.95))
+                    drop-shadow(0 0 44px rgba(255, 255, 255, 0.85));
+            }
+            100% {
+                transform: scale(1);
+                filter:
+                    hue-rotate(240deg)
+                    drop-shadow(0 0 8px rgba(255, 80, 80, 0.95))
+                    drop-shadow(0 0 16px rgba(255, 190, 70, 0.9))
+                    drop-shadow(0 0 24px rgba(90, 230, 130, 0.85))
+                    drop-shadow(0 0 34px rgba(90, 150, 255, 0.8));
+            }
+        }
+
+        /* Big cute eyes */
+        .frog::before {
+            content: '';
+            position: absolute;
+            width: 28%;
+            height: 35%;
+            background: radial-gradient(circle at 40% 40%, white, #E8F5E9);
+            border-radius: 50%;
+            top: 15%;
+            left: 15%;
+            border: 3px solid #1B5E20;
+            box-shadow: 18px 0 0 0 white, 18px 0 0 3px #1B5E20;
+        }
+
+        /* Eye pupils */
+        .frog::after {
+            content: '';
+            position: absolute;
+            width: 10%;
+            height: 14%;
+            background: #1B5E20;
+            border-radius: 50%;
+            top: 25%;
+            left: 24%;
+            box-shadow: 18px 0 0 #1B5E20;
+        }
+
+        /* Eye shine effects */
+        .frog .eye-shine {
+            position: absolute;
+            width: 8%;
+            height: 10%;
+            background: white;
+            border-radius: 50%;
+            top: 18%;
+            left: 27%;
+            box-shadow: 18px 0 0 white, 3px 6px 0 -2px rgba(255,255,255,0.6), 21px 6px 0 -2px rgba(255,255,255,0.6);
+        }
+
+        /* Smile - will become frown dynamically */
+        .frog .smile {
+            position: absolute;
+            width: 50%;
+            height: 18%;
+            border-bottom: 4px solid #1B5E20;
+            border-radius: 0 0 100% 100%;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.2s ease;
+        }
+
+        .frog .smile.frown-1 {
+            border-bottom: none;
+            border-top: 4px solid #1B5E20;
+            border-radius: 100% 100% 0 0;
+            bottom: 15%;
+            width: 50%;
+        }
+
+        .frog .smile.frown-2 {
+            border-bottom: none;
+            border-top: 5px solid #1B5E20;
+            border-radius: 100% 100% 0 0;
+            bottom: 12%;
+            width: 55%;
+        }
+
+        .frog .smile.frown-3 {
+            border-bottom: none;
+            border-top: 6px solid #1B5E20;
+            border-radius: 100% 100% 0 0;
+            bottom: 10%;
+            width: 60%;
+        }
+
+        /* Nose dots */
+        .frog .nose {
+            position: absolute;
+            width: 4%;
+            height: 4%;
+            background: #1B5E20;
+            border-radius: 50%;
+            top: 45%;
+            left: 38%;
+            box-shadow: 10px 0 0 #1B5E20;
+        }
+
+        /* Cute little feet */
+        .frog .feet {
+            position: absolute;
+            bottom: -8%;
+            left: 20%;
+            width: 60%;
+            height: 20%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .frog .foot {
+            width: 20%;
+            height: 100%;
+            background: #2E7D32;
+            border-radius: 50% 50% 40% 40%;
+            position: relative;
+        }
+
+        .frog .foot::before {
+            content: '';
+            position: absolute;
+            width: 140%;
+            height: 50%;
+            background: #2E7D32;
+            border-radius: 50%;
+            bottom: 0;
+            left: -20%;
+        }
+
+        .ui {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 16px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 200px;
+            max-width: 280px;
+        }
+
+        .score, .time, .flies, .swords {
+            font-size: 20px;
+            font-weight: bold;
+            color: #228B22;
+        }
+
+        .flies,
+        .swords {
+            font-size: 18px;
+            color: #FF6B6B;
+        }
+
+        .hud-stats {
+            width: max-content;
+            margin: 0 auto;
+        }
+
+        .hud-stat {
+            display: grid;
+            grid-template-columns: 120px 24px auto;
+            align-items: center;
+            justify-content: center;
+            column-gap: 5px;
+        }
+
+        .hud-stat .stat-label {
+            text-align: left;
+        }
+
+        .hud-stat .stat-count {
+            text-align: right;
+        }
+
+        .hud-stat .stat-icon {
+            display: block;
+        }
+
+        /* Nudge only swords label+count right (~3mm), keep icon fixed */
+        .swords.hud-stat .stat-label {
+            position: relative;
+            left: 7px;
+        }
+
+        .swords.hud-stat .stat-count {
+            position: relative;
+            left: 8px;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            text-align: center;
+            display: none;
+            width: min(92vw, 420px);
+            max-height: calc(100% - 20px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translate(-50%, -60%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        .game-over h2 {
+            font-size: 36px;
+            color: #d32f2f;
+            margin-bottom: 20px;
+        }
+
+        .game-over p {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .name-input-section {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .name-input-section.show {
+            display: block;
+        }
+
+        .name-input-section input {
+            padding: 10px 15px;
+            font-size: 18px;
+            border: 2px solid #228B22;
+            border-radius: 8px;
+            margin-right: 10px;
+            width: 200px;
+        }
+
+        .name-input-section button {
+            background: #228B22;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .leaderboard {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .leaderboard h3 {
+            text-align: center;
+            color: #228B22;
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 15px;
+            margin: 5px 0;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .leaderboard-entry.current {
+            background: #ffd700;
+            font-weight: bold;
+        }
+
+        .restart-btn {
+            background: #228B22;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #1a6b1a;
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .run-stats {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.12);
+            color: #555;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .pause-btn {
+            background: #1e88e5;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+
+        .pause-btn:hover {
+            background: #1565c0;
+            transform: scale(1.03);
+        }
+
+        .swipe-zone {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: min(92vw, 640px);
+            min-height: 78px;
+            margin: 6px auto 0;
+            border-radius: 14px;
+            border: 2px dashed rgba(255, 255, 255, 0.85);
+            background: rgba(0, 0, 0, 0.18);
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body.touch-input .swipe-zone {
+            display: flex;
+        }
+
+        body.touch-input .ui,
+        body.touch-input .instructions,
+        body.touch-input .score,
+        body.touch-input .flies,
+        body.touch-input .swords,
+        body.touch-input .pond {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Fly styling */
+        .fly {
+            position: absolute;
+            width: 25%;
+            height: 25%;
+            z-index: 15;
+            animation: flyBuzz 0.5s ease-in-out infinite;
+        }
+
+        @keyframes flyBuzz {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(2px, -2px) rotate(5deg); }
+            50% { transform: translate(0, -3px) rotate(-5deg); }
+            75% { transform: translate(-2px, -2px) rotate(3deg); }
+        }
+
+        .fly-body {
+            width: 100%;
+            height: 100%;
+            background: #2C2C2C;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .fly-wing {
+            position: absolute;
+            width: 80%;
+            height: 60%;
+            background: rgba(200, 230, 255, 0.6);
+            border-radius: 50%;
+            top: -10%;
+        }
+
+        .fly-wing.left {
+            left: -30%;
+            transform: rotate(-20deg);
+        }
+
+        .fly-wing.right {
+            right: -30%;
+            transform: rotate(20deg);
+        }
+
+        /* Sword power-up */
+        .sword {
+            position: absolute;
+            width: 34%;
+            height: 56%;
+            z-index: 16;
+            left: 33%;
+            top: 18%;
+            transform: rotate(18deg);
+            animation: swordShimmer 0.75s steps(2, end) infinite;
+            pointer-events: none;
+            background-image: url('sword.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            box-shadow:
+                0 0 8px rgba(255, 255, 255, 0.95),
+                0 0 18px rgba(80, 220, 255, 0.95),
+                0 0 28px rgba(120, 120, 255, 0.85),
+                0 0 38px rgba(245, 120, 255, 0.7);
+            image-rendering: pixelated;
+        }
+
+        @keyframes swordShimmer {
+            from {
+                transform: rotate(14deg) translateY(0) scale(1);
+                filter:
+                    hue-rotate(0deg)
+                    saturate(1.2)
+                    brightness(1.1)
+                    drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
+            }
+            to {
+                transform: rotate(24deg) translateY(-3px) scale(1.12);
+                filter:
+                    hue-rotate(36deg)
+                    saturate(1.45)
+                    brightness(1.25)
+                    drop-shadow(0 0 14px rgba(255, 255, 255, 1));
+            }
+        }
+
+        /* Frog speech bubble */
+        .speech-bubble {
+            position: fixed;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 2px solid #228B22;
+            font-size: 16px;
+            font-weight: bold;
+            color: #228B22;
+            white-space: nowrap;
+            z-index: 1000;
+            animation: fadeOut 2s forwards;
+            pointer-events: none;
+        }
+
+        /* Small fly icon for game over screen */
+        .fly-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            position: relative;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .fly-icon::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #2C2C2C;
+            border-radius: 50%;
+            left: 4px;
+            top: 4px;
+        }
+
+        .fly-icon::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 8px;
+            background: rgba(200, 230, 255, 0.6);
+            border-radius: 50%;
+            top: 2px;
+            left: -2px;
+            box-shadow: 14px 0 0 rgba(200, 230, 255, 0.6);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid white;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .frog img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .frog::before,
+        .frog::after,
+        .frog .eye-shine,
+        .frog .smile,
+        .frog .nose,
+        .frog .feet,
+        .frog .foot,
+        .frog .foot::before {
+            display: none;
+        }
+
+        .frog.sinking {
+            animation: frogSink 2.25s ease-in forwards;
+        }
+
+        @keyframes frogSink {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(0) scale(0.1);
+                opacity: 0;
+            }
+        }
+
+        .pike-eyes {
+            position: absolute;
+            display: flex;
+            gap: 30px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .pike-eyes.show {
+            animation: pikeRise 6.75s ease-out forwards;
+        }
+
+        .pike-eye {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #ffb3b3, #ff2a2a 60%, #7a0000 100%);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.7), 0 0 24px rgba(255, 0, 0, 0.4);
+        }
+
+        .pike-head {
+            position: absolute;
+            width: 110px;
+            height: 70px;
+            left: 50%;
+            top: 10px;
+            transform: translateX(-50%);
+            border-radius: 70px 70px 34px 34px;
+            background: radial-gradient(circle at 50% 20%, rgba(120, 170, 150, 0.35), rgba(20, 60, 40, 0.6));
+            border: none;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.12);
+            clip-path: polygon(0 72%, 10% 54%, 26% 36%, 40% 28%, 50% 26%, 60% 28%, 74% 36%, 90% 54%, 100% 72%, 86% 100%, 14% 100%);
+        }
+
+        .pike-mouth {
+            position: absolute;
+            width: 80px;
+            height: 20px;
+            left: 50%;
+            bottom: 6px;
+            transform: translateX(-50%);
+            border-radius: 0 0 60px 60px;
+            background: rgba(10, 20, 30, 0.55);
+        }
+
+        .pike-teeth {
+            position: absolute;
+            width: 80px;
+            height: 18px;
+            left: 50%;
+            bottom: 6px;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .pike-tooth {
+            width: 0;
+            height: 0;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-top: 12px solid rgba(240, 240, 240, 0.95);
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+        }
+
+        .pike-gap {
+            flex: 1 1 auto;
+        }
+
+        .pike-teeth-lower {
+            position: absolute;
+            width: 80px;
+            height: 10px;
+            left: 50%;
+            bottom: 4px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .pike-tooth-small {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-bottom: 6px solid rgba(240, 240, 240, 0.95);
+            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35));
+        }
+
+        .pike-tooth-small.left {
+            left: 26px;
+        }
+
+        .pike-tooth-small.right {
+            right: 26px;
+        }
+
+        .pike-tooth-tiny {
+            position: absolute;
+            top: 2px;
+            width: 0;
+            height: 0;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+            border-bottom: 3px solid rgba(240, 240, 240, 0.95);
+            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
+        }
+
+        .pike-tooth-tiny.left {
+            left: 18px;
+        }
+
+        .pike-tooth-tiny.right {
+            right: 18px;
+        }
+
+        .pike-eye {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pike-eye.left {
+            position: absolute;
+            left: 26px;
+            top: 8px;
+        }
+
+        .pike-eye.right {
+            position: absolute;
+            right: 26px;
+            top: 8px;
+        }
+
+        @keyframes pikeRise {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 145%) scale(0.18);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, 40%) scale(1.05);
+            }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 8px;
+            }
+
+            .game-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .game-container {
+                width: min(92vw, 92vh);
+                height: min(92vw, 92vh);
+                max-width: none;
+                max-height: none;
+            }
+
+            .ui {
+                max-width: min(95vw, 560px);
+                width: 100%;
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .score, .time, .flies, .swords {
+                font-size: 18px;
+            }
+
+            .instructions {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+
+            .game-over {
+                width: 92vw;
+                padding: 22px 14px;
+                max-height: calc(100% - 12px);
+            }
+
+            .game-over h2 {
+                font-size: 30px;
+            }
+
+            .swipe-zone {
+                display: flex;
+                width: min(94vw, 640px);
+            }
+
+            .name-input-section input {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .name-input-section button,
+            .restart-btn {
+                width: 100%;
+            }
+        }
+
+        /* Buy Me a Coffee button placement */
+        #bmc-wbtn {
+            left: 14px !important;
+            right: auto !important;
+            bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+            z-index: 120 !important;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="ui">
+            <div class="level-banner">Level: <span id="levelDisplay">1</span></div>
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="hud-stats">
+                <div class="flies hud-stat"><span class="stat-label">Flies (+5)</span><span id="flyCount" class="stat-count">0</span><svg class="stat-icon" width="31" height="31" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6" fill="#2C2C2C"/><ellipse cx="8" cy="12" rx="6" ry="5" fill="rgba(200,230,255,0.7)"/><ellipse cx="24" cy="12" rx="6" ry="5" fill="rgba(200,230,255,0.7)"/></svg></div>
+                <div class="swords hud-stat"><span class="stat-label">Swords (+20)</span><span id="swordCount" class="stat-count">0</span><svg class="stat-icon" width="48" height="48" viewBox="0 0 64 64"><rect x="29" y="6" width="6" height="30" rx="2" fill="#8ea4b8" stroke="#5b6f82" stroke-width="0.8"/><rect x="30" y="8" width="2" height="26" fill="#c7d5e2"/><rect x="24" y="32" width="16" height="5" rx="2" fill="#5cf2ff"/><rect x="27" y="37" width="10" height="4" rx="2" fill="#9d7bff"/><rect x="30" y="41" width="4" height="11" rx="1.5" fill="#4a2e9b"/><rect x="27" y="50" width="10" height="5" rx="2" fill="#ffd34d"/></svg></div>
+            </div>
+            <button class="pause-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+            <div class="instructions" style="margin-top: 20px; padding: 15px; background: #f0f0f0;">
+                <strong>Controls:</strong><br>
+                Arrow Keys to move 🐸<br>
+                Avoid red leaves!<br>
+                Catch flies (+5) and invincibility<br>
+                swords (+20)!<br>
+                Rescue Mode: collect 50 correct equations and avoid bad equations.
+            </div>
+        </div>
+        
+        <div class="game-container">
+            <div class="daily-game-count">Games today: <span id="dailyGameCount">0</span></div>
+            <div class="pond" id="pond"></div>
+            <div class="pike-eyes" id="pikeEyes" aria-hidden="true">
+                <div class="pike-head">
+                    <div class="pike-eye left"></div>
+                    <div class="pike-eye right"></div>
+                    <div class="pike-mouth"></div>
+                    <div class="pike-teeth">
+                        <span class="pike-tooth"></span>
+                        <span class="pike-tooth"></span>
+                        <span class="pike-tooth"></span>
+                        <span class="pike-gap" aria-hidden="true"></span>
+                        <span class="pike-tooth"></span>
+                        <span class="pike-tooth"></span>
+                        <span class="pike-tooth"></span>
+                    </div>
+                    <div class="pike-teeth-lower">
+                        <span class="pike-tooth-small left"></span>
+                        <span class="pike-tooth-tiny left"></span>
+                        <span class="pike-tooth-tiny right"></span>
+                        <span class="pike-tooth-small right"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="level-overlay" id="levelOverlay">
+                <div class="level-overlay-card" id="levelOverlayText"></div>
+            </div>
+            
+            <div class="game-over" id="gameOver">
+                <h2>Game Over!</h2>
+                <p class="score">Final Score: <span id="finalScore">0</span></p>
+                <div class="name-input-section" id="nameInputSection">
+                    <p style="color: #228B22; font-weight: bold;">🎉 Top 5! Enter your name:</p>
+                    <input type="text" id="playerName" maxlength="20" placeholder="Your name">
+                    <button onclick="submitScore()" style="margin-top: 15px; display: block;">Submit</button>
+                </div>
+                
+                <div class="leaderboard" id="leaderboard">
+                    <h3>🏆 Top 5 Leaderboard</h3>
+                    <div id="leaderboardList"></div>
+                    <button class="clear-scoreboard-btn" onclick="clearScoreboard()" style="margin-top: 15px; background: #d32f2f; color: white; border: none; padding: 8px 20px; font-size: 14px; border-radius: 8px; cursor: pointer;">Clear Scoreboard</button>
+                </div>
+                
+                <div class="run-stats">
+                    <span>Flies caught: <strong id="finalFlies">0</strong></span>
+                    <span>Swords found: <strong id="finalSwords">0</strong></span>
+                    <span>Equations solved: <strong id="finalEquations">0</strong></span>
+                </div>
+
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+            </div>
+        </div>
+        <div class="swipe-zone" id="swipeZone">Swipe Here To Move</div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 5;
+        const SHRINK_DURATION = 4000; // Time for a pad to shrink from 100% to 50% (4 seconds - was 8)
+        const WARNING_DURATION = 500; // Red warning lasts 0.5 second before pop (was 1)
+        const RESPAWN_DELAY = 5000;
+        const UPDATE_INTERVAL = 50;
+        const WARNING_THRESHOLD = 0.5;
+        const SPEED_INCREASE_INTERVAL = 5000; // Increase speed every 5 seconds
+        const SPEED_INCREASE_RATE = 0.95; // Multiply durations by 0.95 (5% faster)
+        const FLY_SPAWN_INTERVAL = 8000; // Spawn a fly every 8 seconds on average
+        const FLY_MOVE_INTERVAL = 2000; // Fly moves to neighboring leaf every 2 seconds
+        const SWORD_SPAWN_INTERVAL = 30000; // Spawn sword every 30 seconds
+        const INVINCIBILITY_DURATION = 5000; // 5 seconds
+        const PREDATOR_DURATION = 6750; // Monster ascent duration (6.75s)
+        const RESCUE_DRAMA_LEADIN_MS = 1450;
+        const RESCUE_REWIND_PAUSE_MS = 260;
+        const LEVEL_TWO_SHRINK_SLOWDOWN = 3.3;
+        const LEVEL_TWO_BAD_EQUATION_CHANCE = 0.25;
+        const LEVEL_TWO_MULTIPLIERS = [2, 3, 5, 10];
+        const LEVEL_TWO_LEAF_POINTS = 1;
+        const LEVEL_TWO_GOAL_POINTS = 50;
+        const LEVEL_TWO_MAX_ACTIVE_PADS = GRID_SIZE * GRID_SIZE;
+        const DAILY_GAME_COUNT_STORAGE_KEY = 'frogComboGameDailyCount';
+        
+        let gameActive = false;
+        let score = 0;
+        let startTime;
+        let frogPosition = { row: 2, col: 2 };
+        let lilyPads = [];
+        let updateInterval;
+        let timeInterval;
+        let speedInterval;
+        let flyInterval;
+        let flyMoveInterval;
+        let swordInterval;
+        let currentScoreId = null;
+        let speedMultiplier = 1.0;
+        let flyPosition = null; // {row, col} or null if no fly
+        let swordPosition = null; // {row, col} or null if no sword
+        let invincibleUntil = 0;
+        let fliesEaten = 0;
+        let swordsFound = 0;
+        let equationsSolved = 0;
+        let predatorTimeout = null;
+        let predatorFrog = null;
+        let musicStarted = false;
+        let pendingStartMusic = false;
+        let pendingPredatorSound = false;
+        let isPaused = false;
+        let pausedAt = 0;
+        let pausedInvincibilityRemaining = 0;
+        let flyStartTimeout = null;
+        let currentLevel = 1;
+        let levelTransitionTimeout = null;
+        let levelCountdownInterval = null;
+        let levelTransitionStartTime = 0;
+        let pendingEquationFailure = null;
+        let dailyGameCount = 0;
+        let dailyGameCountDayKey = '';
+        let scoredEquationIds = new Set();
+        let nextEquationId = 1;
+        let levelTwoGoodCount = 0;
+        let levelTwoLastPadKey = null;
+        let rescuePromptUsed = false;
+        let levelOneSavedScore = 0;
+        let survivalScoreBase = 0;
+        let rescueDramaTimeout = null;
+        
+        // Frog image paths
+        const HAPPY_FROG_IMG = 'frog.png';
+        const SAD_FROG_IMG = 'frog.png';
+        
+        // Background music playlist (random order, no repeats per game)
+        const BACKGROUND_MUSIC_FILES = ['Long Away Home.wav', 'leap.WAV', 'boss_battle.WAV', 'marioish.mp3'];
+        const REWIND_SFX_FILE = 'Tape_Rewind_Sound_Effect_320kbps.mp3';
+        let backgroundMusicAudio = null;
+        let backgroundMusicOrder = [];
+        let backgroundMusicTrackIndex = -1;
+        let currentBackgroundTrack = null;
+        let rewindSfxAudio = null;
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function resetBackgroundMusicPlaylist() {
+            backgroundMusicOrder = shuffleArray([...BACKGROUND_MUSIC_FILES]);
+            backgroundMusicTrackIndex = -1;
+            currentBackgroundTrack = null;
+        }
+
+        function getNextBackgroundTrack() {
+            backgroundMusicTrackIndex += 1;
+            if (backgroundMusicTrackIndex >= backgroundMusicOrder.length) {
+                return null;
+            }
+            return backgroundMusicOrder[backgroundMusicTrackIndex];
+        }
+
+        function playNextBackgroundTrack() {
+            if (!gameActive) return;
+
+            const nextTrack = getNextBackgroundTrack();
+            if (!nextTrack) {
+                // Playlist exhausted for this game (no repeats by design).
+                musicStarted = false;
+                pendingStartMusic = false;
+                return;
+            }
+
+            currentBackgroundTrack = nextTrack;
+            backgroundMusicAudio.src = nextTrack;
+            backgroundMusicAudio.currentTime = 0;
+
+            const playPromise = backgroundMusicAudio.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise.then(() => {
+                    musicStarted = true;
+                    pendingStartMusic = false;
+                }).catch(() => {
+                    musicStarted = false;
+                    pendingStartMusic = true;
+                });
+            } else {
+                musicStarted = true;
+                pendingStartMusic = false;
+            }
+        }
+
+        function handleBackgroundTrackEnded() {
+            if (!gameActive) return;
+            playNextBackgroundTrack();
+        }
+
+        function handleBackgroundTrackError() {
+            if (!gameActive) return;
+            playNextBackgroundTrack();
+        }
+        
+        function startBackgroundMusic() {
+            try {
+                if (!backgroundMusicOrder.length) {
+                    resetBackgroundMusicPlaylist();
+                }
+
+                if (!backgroundMusicAudio) {
+                    backgroundMusicAudio = new Audio();
+                    backgroundMusicAudio.preload = 'auto';
+                    backgroundMusicAudio.volume = 0.35;
+                    backgroundMusicAudio.addEventListener('ended', handleBackgroundTrackEnded);
+                    backgroundMusicAudio.addEventListener('error', handleBackgroundTrackError);
+                }
+
+                if (musicStarted && !backgroundMusicAudio.paused) {
+                    return;
+                }
+
+                if (currentBackgroundTrack) {
+                    const playPromise = backgroundMusicAudio.play();
+                    if (playPromise && typeof playPromise.then === 'function') {
+                        playPromise.then(() => {
+                            musicStarted = true;
+                            pendingStartMusic = false;
+                        }).catch(() => {
+                            musicStarted = false;
+                            pendingStartMusic = true;
+                        });
+                    } else {
+                        musicStarted = true;
+                        pendingStartMusic = false;
+                    }
+                } else {
+                    playNextBackgroundTrack();
+                }
+            } catch(e) {}
+        }
+        
+        function stopBackgroundMusic() {
+            if (backgroundMusicAudio) {
+                try {
+                    backgroundMusicAudio.pause();
+                    backgroundMusicAudio.currentTime = 0;
+                } catch(e) {}
+            }
+            
+            musicStarted = false;
+            pendingStartMusic = false;
+            currentBackgroundTrack = null;
+        }
+        
+        // Sound effects using Web Audio API
+        let audioContext = null;
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {
+            console.log('Web Audio API not supported');
+        }
+
+        function ensureAudioContext() {
+            if (!audioContext) return;
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(() => {});
+            }
+        }
+        
+        function playJumpSound() {
+            if (!audioContext) return;
+            try {
+                ensureAudioContext();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch(e) {}
+        }
+        
+        function playFlyBuzzSound() {
+            if (!audioContext) return;
+            try {
+                ensureAudioContext();
+                // Create a buzzing sound effect for the fly
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Buzzing frequency
+                oscillator.frequency.setValueAtTime(250, audioContext.currentTime);
+                oscillator.type = 'sawtooth';
+                
+                // Quick buzz envelope
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.15);
+            } catch(e) {}
+        }
+
+        function playSwordSpawnSound() {
+            if (!audioContext) return;
+            try {
+                ensureAudioContext();
+                if (audioContext.state !== 'running') return;
+
+                const now = audioContext.currentTime;
+                const master = audioContext.createGain();
+                master.gain.setValueAtTime(0.0, now);
+                // Deliberately loud transient so it cuts through music.
+                master.gain.linearRampToValueAtTime(0.55, now + 0.02);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                master.connect(audioContext.destination);
+
+                // Main sword swoosh (high-to-low sweep)
+                const swoosh = audioContext.createOscillator();
+                const swooshGain = audioContext.createGain();
+                swoosh.type = 'sawtooth';
+                swoosh.frequency.setValueAtTime(1400, now);
+                swoosh.frequency.exponentialRampToValueAtTime(220, now + 0.32);
+                swooshGain.gain.setValueAtTime(0.42, now);
+                swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+                swoosh.connect(swooshGain);
+                swooshGain.connect(master);
+                swoosh.start(now);
+                swoosh.stop(now + 0.34);
+
+                // Bright metallic edge
+                const ring = audioContext.createOscillator();
+                const ringGain = audioContext.createGain();
+                ring.type = 'triangle';
+                ring.frequency.setValueAtTime(2100, now + 0.01);
+                ring.frequency.exponentialRampToValueAtTime(700, now + 0.18);
+                ringGain.gain.setValueAtTime(0.26, now + 0.01);
+                ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                ring.connect(ringGain);
+                ringGain.connect(master);
+                ring.start(now + 0.01);
+                ring.stop(now + 0.21);
+            } catch(e) {}
+        }
+
+        function playCrowdOhhSound() {
+            if (!audioContext) return;
+            try {
+                ensureAudioContext();
+                const now = audioContext.currentTime;
+                const master = audioContext.createGain();
+                master.gain.setValueAtTime(0.0, now);
+                master.gain.linearRampToValueAtTime(0.15, now + 0.15);
+                master.gain.linearRampToValueAtTime(0.06, now + 0.9);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+                master.connect(audioContext.destination);
+                
+                const freqs = [220, 277, 330]; // A3, C#4, E4-ish "ohh" cluster
+                freqs.forEach((f, i) => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.exponentialRampToValueAtTime(f * 0.85, now + 1.2);
+                    gain.gain.setValueAtTime(0.08 - i * 0.01, now);
+                    osc.connect(gain);
+                    gain.connect(master);
+                    osc.start(now);
+                    osc.stop(now + 1.5);
+                });
+            } catch(e) {}
+        }
+
+        function playPredatorRiseSound() {
+            if (!audioContext) return;
+            try {
+                ensureAudioContext();
+                const now = audioContext.currentTime;
+                const master = audioContext.createGain();
+                master.gain.setValueAtTime(0.0, now);
+                master.gain.linearRampToValueAtTime(0.5, now + 0.2);
+                master.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+                master.connect(audioContext.destination);
+                
+                // Low rumble
+                const rumble = audioContext.createOscillator();
+                const rumbleGain = audioContext.createGain();
+                rumble.type = 'sine';
+                rumble.frequency.setValueAtTime(60, now);
+                rumble.frequency.exponentialRampToValueAtTime(40, now + 1.4);
+                rumbleGain.gain.setValueAtTime(0.28, now);
+                rumble.connect(rumbleGain);
+                rumbleGain.connect(master);
+                rumble.start(now);
+                rumble.stop(now + 1.6);
+                
+                // Rising whoosh
+                const whoosh = audioContext.createOscillator();
+                const whooshGain = audioContext.createGain();
+                whoosh.type = 'triangle';
+                whoosh.frequency.setValueAtTime(180, now);
+                whoosh.frequency.exponentialRampToValueAtTime(520, now + 1.2);
+                whooshGain.gain.setValueAtTime(0.18, now + 0.05);
+                whooshGain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+                whoosh.connect(whooshGain);
+                whooshGain.connect(master);
+                whoosh.start(now + 0.05);
+                whoosh.stop(now + 1.35);
+                
+                // Bubble pops
+                [0.15, 0.35, 0.6, 0.9, 1.15].forEach((t) => {
+                    const pop = audioContext.createOscillator();
+                    const popGain = audioContext.createGain();
+                    pop.type = 'sine';
+                    pop.frequency.setValueAtTime(280, now + t);
+                    pop.frequency.exponentialRampToValueAtTime(120, now + t + 0.08);
+                    popGain.gain.setValueAtTime(0.16, now + t);
+                    popGain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.1);
+                    pop.connect(popGain);
+                    popGain.connect(master);
+                    pop.start(now + t);
+                    pop.stop(now + t + 0.12);
+                });
+            } catch(e) {}
+        }
+
+        function playTapeRewindSound() {
+            try {
+                if (!rewindSfxAudio) {
+                    rewindSfxAudio = new Audio(REWIND_SFX_FILE);
+                    rewindSfxAudio.preload = 'auto';
+                    rewindSfxAudio.volume = 0.7;
+                }
+                rewindSfxAudio.pause();
+                rewindSfxAudio.currentTime = 0;
+                const playPromise = rewindSfxAudio.play();
+                if (playPromise && typeof playPromise.then === 'function') {
+                    playPromise.catch(() => {});
+                }
+            } catch (e) {}
+        }
+        
+        function increaseSpeed() {
+            if (!gameActive) return;
+            speedMultiplier /= SPEED_INCREASE_RATE; // Divide by 0.95 to make things 5% faster
+        }
+
+        function getWrapDirectionsForPad(row, col) {
+            const possible = [];
+            if (row === 0) possible.push('up');
+            if (row === GRID_SIZE - 1) possible.push('down');
+            if (col === 0) possible.push('left');
+            if (col === GRID_SIZE - 1) possible.push('right');
+            if (possible.length === 0) return [];
+
+            const dirs = [];
+            const chancePerDirection = 0.35;
+            possible.forEach((dir) => {
+                if (Math.random() < chancePerDirection) dirs.push(dir);
+            });
+
+            // Corners can have 1 or 2 arrows. Ensure at least one occasionally.
+            if (possible.length === 2 && dirs.length === 0 && Math.random() < 0.5) {
+                dirs.push(possible[Math.floor(Math.random() * possible.length)]);
+            }
+
+            return dirs;
+        }
+
+        function addWrapArrowsToPad(padElement, directions) {
+            if (!directions || directions.length === 0) return;
+            directions.forEach((dir) => {
+                const arrow = document.createElement('div');
+                arrow.className = `wrap-arrow ${dir}`;
+                padElement.appendChild(arrow);
+            });
+        }
+
+        function isEquationLevel() {
+            return currentLevel === 2;
+        }
+
+        function isSurvivalLevel() {
+            return currentLevel === 1 || currentLevel === 3;
+        }
+
+        function getCurrentShrinkSlowdown() {
+            return isEquationLevel() ? LEVEL_TWO_SHRINK_SLOWDOWN : 1;
+        }
+
+        function getCurrentRespawnDelayMs() {
+            return isEquationLevel() ? RESPAWN_DELAY * 0.45 : RESPAWN_DELAY;
+        }
+
+        function getCurrentRespawnJitterMs() {
+            return isEquationLevel() ? 450 : 1500;
+        }
+
+        function getTodayDateKey() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function loadDailyGameCount() {
+            const today = getTodayDateKey();
+            try {
+                const raw = localStorage.getItem(DAILY_GAME_COUNT_STORAGE_KEY);
+                if (!raw) return 0;
+                const parsed = JSON.parse(raw);
+                if (!parsed || parsed.date !== today || typeof parsed.count !== 'number') return 0;
+                return parsed.count;
+            } catch (_) {
+                return 0;
+            }
+        }
+
+        function saveDailyGameCount(count) {
+            const payload = { date: getTodayDateKey(), count: Math.max(0, count | 0) };
+            try {
+                localStorage.setItem(DAILY_GAME_COUNT_STORAGE_KEY, JSON.stringify(payload));
+            } catch (_) {}
+        }
+
+        function updateDailyGameCountDisplay() {
+            const el = document.getElementById('dailyGameCount');
+            if (el) el.textContent = dailyGameCount;
+        }
+
+        function syncDailyGameCount() {
+            dailyGameCountDayKey = getTodayDateKey();
+            dailyGameCount = loadDailyGameCount();
+            updateDailyGameCountDisplay();
+        }
+
+        function incrementDailyGameCount() {
+            dailyGameCountDayKey = getTodayDateKey();
+            dailyGameCount = loadDailyGameCount() + 1;
+            saveDailyGameCount(dailyGameCount);
+            updateDailyGameCountDisplay();
+        }
+
+        function updateLevelDisplay() {
+            const levelDisplay = document.getElementById('levelDisplay');
+            if (!levelDisplay) return;
+            if (currentLevel === 1) levelDisplay.textContent = '1';
+            else if (currentLevel === 2) levelDisplay.textContent = '2 (Rescue)';
+            else levelDisplay.textContent = '3';
+        }
+
+        function getPadKey(row, col) {
+            return `${row},${col}`;
+        }
+
+        function clearLevelTransitionTimers() {
+            if (levelCountdownInterval) {
+                clearInterval(levelCountdownInterval);
+                levelCountdownInterval = null;
+            }
+            if (levelTransitionTimeout) {
+                clearTimeout(levelTransitionTimeout);
+                levelTransitionTimeout = null;
+            }
+        }
+
+        function showLevelOverlay(html) {
+            const overlay = document.getElementById('levelOverlay');
+            const overlayText = document.getElementById('levelOverlayText');
+            if (!overlay || !overlayText) return;
+            overlayText.innerHTML = html;
+            overlay.classList.add('show');
+        }
+
+        function hideLevelOverlay() {
+            const overlay = document.getElementById('levelOverlay');
+            if (!overlay) return;
+            overlay.classList.remove('show');
+        }
+
+        function randomChoice(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function generateEquationData() {
+            const a = randomChoice(LEVEL_TWO_MULTIPLIERS);
+            const b = Math.floor(Math.random() * 10) + 1;
+            const correct = a * b;
+            const isBad = Math.random() < LEVEL_TWO_BAD_EQUATION_CHANCE;
+
+            let shown = correct;
+            if (isBad) {
+                const deltas = [-10, -5, -2, 2, 5, 10];
+                for (let i = 0; i < 12; i++) {
+                    const candidate = correct + randomChoice(deltas);
+                    if (candidate !== correct && candidate > 0 && candidate <= 100) {
+                        shown = candidate;
+                        break;
+                    }
+                }
+                if (shown === correct) {
+                    shown = Math.max(1, Math.min(100, correct + 1));
+                }
+            }
+
+            return {
+                a,
+                b,
+                correct,
+                shown,
+                isBad,
+                text: `${a}x${b}=${shown}`,
+                correctText: `${a}x${b}=${correct}`
+            };
+        }
+
+        function applyPadEquation(padObj) {
+            if (!padObj || !padObj.equationElement) return;
+            if (!isEquationLevel()) {
+                padObj.equation = null;
+                padObj.progressLabel = null;
+                padObj.equationElement.textContent = '';
+                padObj.equationElement.style.display = 'none';
+                return;
+            }
+            if (padObj.occupiedByItem) {
+                clearPadEquation(padObj);
+                if (padObj.progressLabel !== null) {
+                    padObj.equationElement.textContent = String(padObj.progressLabel);
+                    padObj.equationElement.style.display = 'none';
+                }
+                return;
+            }
+            if (padObj.progressLabel !== null) {
+                padObj.equation = null;
+                padObj.equationElement.textContent = String(padObj.progressLabel);
+                padObj.equationElement.style.display = 'flex';
+                return;
+            }
+
+            const equation = generateEquationData();
+            equation.id = nextEquationId++;
+            padObj.equation = equation;
+            padObj.equationElement.textContent = equation.text;
+            padObj.equationElement.style.display = 'flex';
+        }
+
+        function clearPadEquation(padObj) {
+            if (!padObj || !padObj.equationElement) return;
+            padObj.equation = null;
+            if (padObj.progressLabel !== null) {
+                padObj.equationElement.textContent = String(padObj.progressLabel);
+                padObj.equationElement.style.display = 'flex';
+            } else {
+                padObj.equationElement.textContent = '';
+                padObj.equationElement.style.display = 'none';
+            }
+        }
+
+        function setPadProgressLabelByKey(padKey, value) {
+            const [row, col] = String(padKey).split(',').map(Number);
+            const pad = lilyPads.find(p => p.row === row && p.col === col);
+            if (!pad || !pad.equationElement) return;
+            pad.progressLabel = value;
+            pad.equation = null;
+            pad.equationElement.textContent = String(value);
+            if (!(flyPosition && flyPosition.row === row && flyPosition.col === col) &&
+                !(swordPosition && swordPosition.row === row && swordPosition.col === col)) {
+                pad.equationElement.style.display = 'flex';
+            }
+        }
+
+        function updatePadEquationForOccupancy(row, col, occupied) {
+            if (!isEquationLevel()) return;
+            const pad = lilyPads.find(p => p.row === row && p.col === col);
+            if (!pad) return;
+            pad.occupiedByItem = occupied;
+            pad.element.classList.toggle('occupied-item', occupied);
+            if (occupied) {
+                clearPadEquation(pad);
+                return;
+            }
+            if (!pad.equation) applyPadEquation(pad);
+        }
+
+        function refreshEquationVisibility() {
+            for (const pad of lilyPads) {
+                if (!pad || !pad.equationElement) continue;
+                if (!isEquationLevel()) {
+                    pad.equationElement.style.display = 'none';
+                    continue;
+                }
+                if (!pad.equation && pad.progressLabel === null) {
+                    pad.equationElement.style.display = 'none';
+                    continue;
+                }
+
+                const occupiedByFly = !!flyPosition && flyPosition.row === pad.row && flyPosition.col === pad.col;
+                const occupiedBySword = !!swordPosition && swordPosition.row === pad.row && swordPosition.col === pad.col;
+                if (occupiedByFly || occupiedBySword) {
+                    pad.equationElement.style.display = 'none';
+                } else {
+                    pad.equationElement.style.display = 'flex';
+                }
+            }
+        }
+
+        function forcePadGone(pad, now) {
+            if (!pad) return;
+            pad.scale = 0;
+            pad.isGone = true;
+            pad.element.style.transform = 'scale(0)';
+            pad.element.classList.add('gone');
+            pad.element.classList.remove('warning');
+            const jitter = getCurrentRespawnJitterMs();
+            const delay = getCurrentRespawnDelayMs() + (Math.random() * jitter * 2 - jitter);
+            pad.respawnTime = now + Math.max(1200, delay);
+            pad.shrinkStartTime = null;
+            pad.warningStartTime = null;
+            pad.progressLabel = null;
+            pad.equation = null;
+        }
+
+        function enforceLevelTwoPadCap(now) {
+            if (!isEquationLevel()) return;
+            const activePads = lilyPads.filter(p => !p.isGone && p.respawnTime === null && p.scale > 0);
+            if (activePads.length <= LEVEL_TWO_MAX_ACTIVE_PADS) return;
+
+            const removable = activePads.filter((p) => {
+                if (p.row === frogPosition.row && p.col === frogPosition.col) return false;
+                if (flyPosition && p.row === flyPosition.row && p.col === flyPosition.col) return false;
+                if (swordPosition && p.row === swordPosition.row && p.col === swordPosition.col) return false;
+                return true;
+            });
+
+            const excess = Math.min(activePads.length - LEVEL_TWO_MAX_ACTIVE_PADS, removable.length);
+            if (excess <= 0) return;
+
+            const shuffled = [...removable].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < excess; i++) {
+                forcePadGone(shuffled[i], now);
+            }
+        }
+
+        function triggerBadEquationFailure(row, col, equation) {
+            if (pendingEquationFailure) return;
+            pendingEquationFailure = { row, col, equation };
+            gameActive = false;
+            isPaused = false;
+            clearGameLoops();
+            clearSword();
+            setPauseButtonState('Pause', true);
+            stopBackgroundMusic();
+
+            const wrongText = equation ? equation.text : 'Wrong equation';
+            const correctText = equation ? equation.correctText : '';
+            showLevelOverlay(`Wrong: ${wrongText}<br>Correct: ${correctText}<br><button id="equationOkBtn" class="overlay-ok-btn">Continue</button>`);
+
+            const okBtn = document.getElementById('equationOkBtn');
+            if (okBtn) {
+                okBtn.addEventListener('click', () => {
+                    hideLevelOverlay();
+                    const failure = pendingEquationFailure;
+                    pendingEquationFailure = null;
+                    if (!failure) return;
+                    startPredatorSequence(failure.row, failure.col, { skipRescuePrompt: true, forceStart: true, removeKillerPad: true });
+                }, { once: true });
+            }
+        }
+
+        function beginRescueChallenge() {
+            showLevelOverlay(
+                `Save the frog challenge:<br>` +
+                `Collect ${LEVEL_TWO_GOAL_POINTS} correct equations without touching a wrong one.<br><br>` +
+                `<button id="rescueStartBtn" class="overlay-choice-btn primary">Start Rescue</button>`
+            );
+            const startBtn = document.getElementById('rescueStartBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', () => {
+                    hideLevelOverlay();
+                    score = levelOneSavedScore;
+                    initGame({ level: 2, keepScore: true, keepRunStats: true });
+                }, { once: true });
+            }
+        }
+
+        function clearRescueDramaTimeout() {
+            if (rescueDramaTimeout) {
+                clearTimeout(rescueDramaTimeout);
+                rescueDramaTimeout = null;
+            }
+        }
+
+        function clearPredatorVisuals() {
+            if (predatorFrog) {
+                predatorFrog.remove();
+                predatorFrog = null;
+            }
+            const eyes = document.getElementById('pikeEyes');
+            if (eyes) {
+                eyes.classList.remove('show');
+                eyes.style.animationPlayState = 'running';
+            }
+        }
+
+        function pausePredatorVisuals() {
+            const frog = document.querySelector('.frog.sinking');
+            const eyes = document.getElementById('pikeEyes');
+            if (frog) frog.style.animationPlayState = 'paused';
+            if (eyes && eyes.classList.contains('show')) eyes.style.animationPlayState = 'paused';
+        }
+
+        function resumePredatorAfterRescuePrompt() {
+            const frog = document.querySelector('.frog.sinking');
+            const eyes = document.getElementById('pikeEyes');
+            if (frog) frog.style.animationPlayState = 'running';
+            if (eyes && eyes.classList.contains('show')) eyes.style.animationPlayState = 'running';
+
+            if (predatorTimeout) clearTimeout(predatorTimeout);
+            const remainingMs = Math.max(700, PREDATOR_DURATION - RESCUE_DRAMA_LEADIN_MS);
+            predatorTimeout = setTimeout(() => {
+                clearPredatorVisuals();
+                endGame();
+            }, remainingMs);
+        }
+
+        function startRescueDramaticLeadIn(row, col) {
+            gameActive = false;
+            isPaused = false;
+            clearGameLoops();
+            clearSword();
+            invincibleUntil = 0;
+            setPauseButtonState('Pause', true);
+            stopBackgroundMusic();
+            clearRescueDramaTimeout();
+            if (predatorTimeout) {
+                clearTimeout(predatorTimeout);
+                predatorTimeout = null;
+            }
+
+            levelOneSavedScore = score;
+            showFrogOnEmpty(row, col, true);
+
+            const existingFly = document.querySelector('.fly');
+            if (existingFly) existingFly.remove();
+
+            const eyes = document.getElementById('pikeEyes');
+            if (eyes && predatorFrog) {
+                const pond = document.getElementById('pond');
+                const pondRect = pond.getBoundingClientRect();
+                const frogRect = predatorFrog.getBoundingClientRect();
+                const centerX = frogRect.left - pondRect.left + frogRect.width / 2;
+                const centerY = frogRect.top - pondRect.top + frogRect.height / 2;
+                eyes.style.left = centerX + 'px';
+                eyes.style.top = (centerY - 43) + 'px';
+                eyes.classList.remove('show');
+                eyes.style.animationPlayState = 'running';
+                void eyes.offsetWidth;
+                eyes.classList.add('show');
+            }
+
+            ensureAudioContext();
+            if (audioContext && audioContext.state === 'running') {
+                playCrowdOhhSound();
+            } else {
+                pendingPredatorSound = true;
+            }
+
+            rescueDramaTimeout = setTimeout(() => {
+                pausePredatorVisuals();
+                playTapeRewindSound();
+                rescueDramaTimeout = setTimeout(() => {
+                    promptRescueChoice(row, col, { alreadyPrepared: true });
+                }, RESCUE_REWIND_PAUSE_MS);
+            }, RESCUE_DRAMA_LEADIN_MS);
+        }
+
+        function promptRescueChoice(row, col, options = {}) {
+            if (!options.alreadyPrepared) {
+                startRescueDramaticLeadIn(row, col);
+                return;
+            }
+
+            clearRescueDramaTimeout();
+            showLevelOverlay(
+                `The monster is about to eat the frog.<br>` +
+                `Save the frog and continue?<br><br>` +
+                `<button id="saveFrogYesBtn" class="overlay-choice-btn primary">Yes</button>` +
+                `<button id="saveFrogNoBtn" class="overlay-choice-btn secondary">No</button>`
+            );
+
+            const yesBtn = document.getElementById('saveFrogYesBtn');
+            const noBtn = document.getElementById('saveFrogNoBtn');
+
+            if (yesBtn) {
+                yesBtn.addEventListener('click', () => {
+                    rescuePromptUsed = true;
+                    hideLevelOverlay();
+                    clearPredatorVisuals();
+                    beginRescueChallenge();
+                }, { once: true });
+            }
+
+            if (noBtn) {
+                noBtn.addEventListener('click', () => {
+                    hideLevelOverlay();
+                    resumePredatorAfterRescuePrompt();
+                }, { once: true });
+            }
+        }
+
+        function startLevelThreeFromRescue() {
+            gameActive = false;
+            isPaused = false;
+            clearGameLoops();
+            clearSword();
+            setPauseButtonState('Pause', true);
+
+            showLevelOverlay(
+                `You saved the frog!<br>` +
+                `+${LEVEL_TWO_GOAL_POINTS} points earned.<br>` +
+                `Starting Level 3...<br><br>` +
+                `<button id="startLevelThreeBtn" class="overlay-choice-btn primary">Continue</button>`
+            );
+
+            const continueBtn = document.getElementById('startLevelThreeBtn');
+            if (continueBtn) {
+                continueBtn.addEventListener('click', () => {
+                    hideLevelOverlay();
+                    initGame({ level: 3, keepScore: true, keepRunStats: true });
+                }, { once: true });
+            }
+        }
+
+        function isInvincible() {
+            return Date.now() < invincibleUntil;
+        }
+
+        function applyFrogInvincibleVisual() {
+            const frog = document.querySelector('.frog');
+            if (!frog) return;
+            frog.classList.toggle('invincible', isInvincible());
+        }
+
+        function clearSword() {
+            const existingSword = document.querySelector('.sword');
+            const previousSwordPos = swordPosition ? { ...swordPosition } : null;
+            if (existingSword) existingSword.remove();
+            swordPosition = null;
+            if (previousSwordPos) {
+                updatePadEquationForOccupancy(previousSwordPos.row, previousSwordPos.col, false);
+            }
+            refreshEquationVisibility();
+        }
+
+        function clearFly() {
+            const existingFly = document.querySelector('.fly');
+            const previousFlyPos = flyPosition ? { ...flyPosition } : null;
+            if (existingFly) existingFly.remove();
+            flyPosition = null;
+            if (previousFlyPos) {
+                updatePadEquationForOccupancy(previousFlyPos.row, previousFlyPos.col, false);
+            }
+            refreshEquationVisibility();
+        }
+
+        function spawnSword() {
+            if (!gameActive) return;
+
+            clearSword();
+
+            const availablePads = lilyPads.filter(p =>
+                !p.isGone &&
+                p.scale > 0.3 &&
+                !(p.row === frogPosition.row && p.col === frogPosition.col) &&
+                !(flyPosition && p.row === flyPosition.row && p.col === flyPosition.col) &&
+                !(isEquationLevel() && p.equation && p.equation.isBad)
+            );
+
+            if (availablePads.length === 0) return;
+
+            const randomPad = availablePads[Math.floor(Math.random() * availablePads.length)];
+            swordPosition = { row: randomPad.row, col: randomPad.col };
+            updatePadEquationForOccupancy(randomPad.row, randomPad.col, true);
+
+            const sword = document.createElement('div');
+            sword.className = 'sword';
+            randomPad.element.appendChild(sword);
+            refreshEquationVisibility();
+
+            playSwordSpawnSound();
+        }
+
+        function collectSword() {
+            clearSword();
+            // Same score model as flies: shift timer and update current score display.
+            startTime -= 20000; // +20 seconds/points
+            score += 20;
+            swordsFound++;
+            document.getElementById('score').textContent = score;
+            document.getElementById('swordCount').textContent = swordsFound;
+
+            invincibleUntil = Date.now() + INVINCIBILITY_DURATION;
+            applyFrogInvincibleVisual();
+
+            const messages = [
+                "Sword up! +20",
+                "Hero mode! +20",
+                "Blade boost! +20",
+                "Invincible! +20",
+                "Power sword! +20"
+            ];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            showSpeechBubble(randomMessage);
+        }
+
+        function spawnFly() {
+            if (!gameActive) return;
+            
+            // Remove any existing fly
+            const existingFly = document.querySelector('.fly');
+            const previousFlyPos = flyPosition ? { ...flyPosition } : null;
+            if (existingFly) existingFly.remove();
+            flyPosition = null;
+            if (previousFlyPos) {
+                updatePadEquationForOccupancy(previousFlyPos.row, previousFlyPos.col, false);
+            }
+            refreshEquationVisibility();
+            
+            // Find pads that are not gone and not the frog's current position
+            const availablePads = lilyPads.filter(p => 
+                !p.isGone && 
+                p.scale > 0.3 && 
+                !(p.row === frogPosition.row && p.col === frogPosition.col) &&
+                !(isEquationLevel() && p.equation && p.equation.isBad)
+            );
+            
+            if (availablePads.length === 0) return;
+            
+            // Pick a random pad
+            const randomPad = availablePads[Math.floor(Math.random() * availablePads.length)];
+            flyPosition = { row: randomPad.row, col: randomPad.col };
+            updatePadEquationForOccupancy(randomPad.row, randomPad.col, true);
+            
+            // Create fly element
+            const fly = document.createElement('div');
+            fly.className = 'fly';
+            
+            const flyBody = document.createElement('div');
+            flyBody.className = 'fly-body';
+            
+            const leftWing = document.createElement('div');
+            leftWing.className = 'fly-wing left';
+            
+            const rightWing = document.createElement('div');
+            rightWing.className = 'fly-wing right';
+            
+            flyBody.appendChild(leftWing);
+            flyBody.appendChild(rightWing);
+            fly.appendChild(flyBody);
+            
+            randomPad.element.appendChild(fly);
+            refreshEquationVisibility();
+            
+            // Play buzzing sound
+            playFlyBuzzSound();
+        }
+
+        function moveFlyToNeighbor() {
+            if (!gameActive || !flyPosition) return;
+            if (isEquationLevel()) return;
+            
+            // Get neighboring positions (up, down, left, right)
+            const neighbors = [
+                { row: flyPosition.row - 1, col: flyPosition.col },
+                { row: flyPosition.row + 1, col: flyPosition.col },
+                { row: flyPosition.row, col: flyPosition.col - 1 },
+                { row: flyPosition.row, col: flyPosition.col + 1 }
+            ];
+            
+            // Filter to valid, available pads (not gone, not too small)
+            const availableNeighbors = neighbors.filter(pos => {
+                if (pos.row < 0 || pos.row >= GRID_SIZE || pos.col < 0 || pos.col >= GRID_SIZE) {
+                    return false;
+                }
+                const pad = lilyPads.find(p => p.row === pos.row && p.col === pos.col);
+                return pad && !pad.isGone && pad.scale > 0.3;
+            });
+            
+            // If no valid neighbors, stay in place
+            if (availableNeighbors.length === 0) return;
+            
+            // Pick a random neighbor
+            const newPos = availableNeighbors[Math.floor(Math.random() * availableNeighbors.length)];
+            
+            // Remove fly from current position
+            const existingFly = document.querySelector('.fly');
+            const previousFlyPos = flyPosition ? { ...flyPosition } : null;
+            if (existingFly) existingFly.remove();
+            if (previousFlyPos) {
+                updatePadEquationForOccupancy(previousFlyPos.row, previousFlyPos.col, false);
+            }
+            refreshEquationVisibility();
+            
+            // Update fly position
+            flyPosition = { row: newPos.row, col: newPos.col };
+            updatePadEquationForOccupancy(newPos.row, newPos.col, true);
+            
+            // Check if fly landed on the frog - if so, auto-eat it!
+            if (newPos.row === frogPosition.row && newPos.col === frogPosition.col) {
+                eatFly();
+                return;
+            }
+            
+            // Add fly to new position
+            const newPad = lilyPads.find(p => p.row === newPos.row && p.col === newPos.col);
+            if (newPad) {
+                const fly = document.createElement('div');
+                fly.className = 'fly';
+                
+                const flyBody = document.createElement('div');
+                flyBody.className = 'fly-body';
+                
+                const leftWing = document.createElement('div');
+                leftWing.className = 'fly-wing left';
+                
+                const rightWing = document.createElement('div');
+                rightWing.className = 'fly-wing right';
+                
+                flyBody.appendChild(leftWing);
+                flyBody.appendChild(rightWing);
+                fly.appendChild(flyBody);
+                
+                newPad.element.appendChild(fly);
+                refreshEquationVisibility();
+            }
+        }
+
+        function eatFly() {
+            // Remove fly
+            const flyElement = document.querySelector('.fly');
+            if (flyElement) flyElement.remove();
+            
+            // Find the pad the frog is on and inflate it to full size
+            const currentPad = lilyPads.find(p => 
+                p.row === frogPosition.row && p.col === frogPosition.col
+            );
+            
+            if (currentPad) {
+                currentPad.scale = 1.0;
+                currentPad.shrinkStartTime = Date.now() + 2000; // Give 2 seconds before it starts shrinking again
+                currentPad.warningStartTime = null;
+                currentPad.element.classList.remove('warning');
+                currentPad.element.style.transform = 'scale(1)';
+            }
+            
+            flyPosition = null;
+            if (isEquationLevel()) {
+                updatePadEquationForOccupancy(frogPosition.row, frogPosition.col, false);
+            }
+            refreshEquationVisibility();
+            
+            // Add 5 bonus seconds to survival time
+            startTime -= 5000; // Move startTime back by 5 seconds = add 5 seconds to elapsed score
+            
+            // Add 5 bonus points to score
+            score += 5;
+            fliesEaten++;
+            document.getElementById('score').textContent = score;
+            document.getElementById('flyCount').textContent = fliesEaten;
+            
+            // Reset speed multiplier
+            speedMultiplier = 1.0;
+            
+            // Update frog to show happy expression now that leaf is big
+            updateFrogPosition();
+            
+            // Play eat sound
+            playEatSound();
+            
+            // Show cute message
+            const messages = [
+                "Yummy! 😋 +5",
+                "Delicious! 🐸 +5",
+                "Nom nom! 💚 +5",
+                "Tasty! ✨ +5",
+                "So good! 🎉 +5"
+            ];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            showSpeechBubble(randomMessage);
+        }
+
+        function showSpeechBubble(message) {
+            const frog = document.querySelector('.frog');
+            if (!frog) return;
+            
+            // Remove any existing speech bubble
+            const existingBubble = document.querySelector('.speech-bubble');
+            if (existingBubble) existingBubble.remove();
+            
+            // Get frog position on screen
+            const frogRect = frog.getBoundingClientRect();
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'speech-bubble';
+            bubble.textContent = message;
+            document.body.appendChild(bubble);
+            
+            // Position above frog, centered
+            const bubbleRect = bubble.getBoundingClientRect();
+            bubble.style.left = (frogRect.left + frogRect.width / 2 - bubbleRect.width / 2) + 'px';
+            bubble.style.top = (frogRect.top - bubbleRect.height - 15) + 'px';
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (bubble.parentNode) bubble.remove();
+            }, 2000);
+        }
+
+        function playEatSound() {
+            if (!audioContext) return;
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.15);
+                
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.15);
+            } catch(e) {}
+        }
+
+        // Leaderboard management
+        function getLeaderboard() {
+            const stored = localStorage.getItem('frogComboGameLeaderboard');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveLeaderboard(leaderboard) {
+            localStorage.setItem('frogComboGameLeaderboard', JSON.stringify(leaderboard));
+        }
+
+        function isTopScore(score) {
+            const leaderboard = getLeaderboard();
+            return leaderboard.length < 5 || score > leaderboard[leaderboard.length - 1].score;
+        }
+
+        function addToLeaderboard(name, score) {
+            let leaderboard = getLeaderboard();
+            const entry = { name: name || 'Anonymous', score: score, id: Date.now() };
+            leaderboard.push(entry);
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 5);
+            saveLeaderboard(leaderboard);
+            return entry.id;
+        }
+
+        function displayLeaderboard(highlightId = null) {
+            const leaderboard = getLeaderboard();
+            const listDiv = document.getElementById('leaderboardList');
+            
+            if (leaderboard.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #999;">No scores yet!</p>';
+                return;
+            }
+            
+            listDiv.innerHTML = leaderboard.map((entry, index) => 
+                `<div class="leaderboard-entry ${entry.id === highlightId ? 'current' : ''}">
+                    <span>${index + 1}. ${entry.name}</span>
+                    <span>${entry.score}</span>
+                </div>`
+            ).join('');
+        }
+
+        function submitScore() {
+            const nameInput = document.getElementById('playerName');
+            const name = nameInput.value.trim() || 'Anonymous';
+            currentScoreId = addToLeaderboard(name, score);
+            document.getElementById('nameInputSection').classList.remove('show');
+            displayLeaderboard(currentScoreId);
+        }
+
+        function clearScoreboard() {
+            if (confirm('Are you sure you want to clear the entire scoreboard? This cannot be undone!')) {
+                localStorage.removeItem('frogComboGameLeaderboard');
+                currentScoreId = null;
+                displayLeaderboard();
+            }
+        }
+
+        function setPauseButtonState(label, disabled = false) {
+            const btn = document.getElementById('pauseBtn');
+            if (!btn) return;
+            btn.textContent = label;
+            btn.disabled = disabled;
+            btn.style.opacity = disabled ? '0.6' : '1';
+            btn.style.cursor = disabled ? 'default' : 'pointer';
+        }
+
+        function clearGameLoops() {
+            clearInterval(updateInterval);
+            clearInterval(timeInterval);
+            clearInterval(speedInterval);
+            clearInterval(flyInterval);
+            clearInterval(flyMoveInterval);
+            clearInterval(swordInterval);
+            clearLevelTransitionTimers();
+            clearRescueDramaTimeout();
+            if (flyStartTimeout) {
+                clearTimeout(flyStartTimeout);
+                flyStartTimeout = null;
+            }
+        }
+
+        function startGameLoops() {
+            updateInterval = setInterval(updateGame, UPDATE_INTERVAL);
+            timeInterval = setInterval(updateTime, 100);
+            speedInterval = setInterval(increaseSpeed, SPEED_INCREASE_INTERVAL);
+
+            if (isEquationLevel()) {
+                clearFly();
+                clearSword();
+                return;
+            }
+
+            if (flyPosition) {
+                flyInterval = setInterval(spawnFly, FLY_SPAWN_INTERVAL);
+                if (!isEquationLevel()) {
+                    flyMoveInterval = setInterval(moveFlyToNeighbor, FLY_MOVE_INTERVAL);
+                }
+            } else {
+                flyStartTimeout = setTimeout(() => {
+                    if (!gameActive || isPaused) return;
+                    spawnFly();
+                    flyInterval = setInterval(spawnFly, FLY_SPAWN_INTERVAL);
+                    if (!isEquationLevel()) {
+                        flyMoveInterval = setInterval(moveFlyToNeighbor, FLY_MOVE_INTERVAL);
+                    }
+                    flyStartTimeout = null;
+                }, FLY_SPAWN_INTERVAL);
+            }
+
+            swordInterval = setInterval(spawnSword, SWORD_SPAWN_INTERVAL);
+        }
+
+        function shiftPadTimersBy(ms) {
+            for (const pad of lilyPads) {
+                if (pad.shrinkStartTime !== null) pad.shrinkStartTime += ms;
+                if (pad.warningStartTime !== null) pad.warningStartTime += ms;
+                if (pad.respawnTime !== null) pad.respawnTime += ms;
+            }
+        }
+
+        function pauseBackgroundMusic() {
+            if (!backgroundMusicAudio) return;
+            try { backgroundMusicAudio.pause(); } catch(e) {}
+        }
+
+        function resumeBackgroundMusic() {
+            if (!backgroundMusicAudio || !currentBackgroundTrack) return;
+            const playPromise = backgroundMusicAudio.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise.catch(() => {
+                    pendingStartMusic = true;
+                });
+            }
+        }
+
+        function pauseGame() {
+            if (!gameActive || isPaused) return;
+            isPaused = true;
+            pausedAt = Date.now();
+            pausedInvincibilityRemaining = Math.max(0, invincibleUntil - pausedAt);
+            clearGameLoops();
+            pauseBackgroundMusic();
+            setPauseButtonState('Continue');
+        }
+
+        function resumeGame() {
+            if (!gameActive || !isPaused) return;
+            const now = Date.now();
+            const pausedDuration = now - pausedAt;
+            startTime += pausedDuration;
+            shiftPadTimersBy(pausedDuration);
+            invincibleUntil = pausedInvincibilityRemaining > 0 ? (now + pausedInvincibilityRemaining) : 0;
+            pausedInvincibilityRemaining = 0;
+            isPaused = false;
+            startGameLoops();
+            resumeBackgroundMusic();
+            setPauseButtonState('Pause');
+        }
+
+        function togglePause() {
+            if (!gameActive) return;
+            if (isPaused) resumeGame();
+            else pauseGame();
+        }
+
+        function initGame(options = {}) {
+            const level = options.level || 1;
+            const keepScore = options.keepScore === true;
+            const keepRunStats = options.keepRunStats === true;
+            const isNewRun = level === 1 && !keepScore && !keepRunStats;
+            currentLevel = level;
+            updateLevelDisplay();
+            if (isNewRun) {
+                rescuePromptUsed = false;
+                levelOneSavedScore = 0;
+                scoredEquationIds = new Set();
+                nextEquationId = 1;
+                levelTwoGoodCount = 0;
+                levelTwoLastPadKey = null;
+                survivalScoreBase = 0;
+            }
+            if (isEquationLevel()) {
+                scoredEquationIds = new Set();
+                nextEquationId = 1;
+                levelTwoGoodCount = 0;
+                levelTwoLastPadKey = null;
+            }
+
+            if (isNewRun) incrementDailyGameCount();
+            else syncDailyGameCount();
+
+            const pond = document.getElementById('pond');
+            pond.innerHTML = '';
+            clearGameLoops();
+            hideLevelOverlay();
+            clearPredatorVisuals();
+            pendingEquationFailure = null;
+            lilyPads = [];
+            frogPosition = { row: 2, col: 2 };
+            if (!keepScore) {
+                score = 0;
+                if (level === 1) {
+                    survivalScoreBase = 0;
+                    levelOneSavedScore = 0;
+                }
+            }
+            currentScoreId = null;
+            invincibleUntil = 0;
+            swordPosition = null;
+            resetBackgroundMusicPlaylist();
+            isPaused = false;
+            pausedAt = 0;
+            pausedInvincibilityRemaining = 0;
+            setPauseButtonState('Pause');
+            
+            const now = Date.now();
+            
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const pad = document.createElement('div');
+                    pad.className = 'lily-pad';
+                    pad.dataset.row = row;
+                    pad.dataset.col = col;
+                    pond.appendChild(pad);
+
+                    const equationElement = document.createElement('div');
+                    equationElement.className = 'equation-text';
+                    pad.appendChild(equationElement);
+
+                    const wrapDirections = getWrapDirectionsForPad(row, col);
+                    addWrapArrowsToPad(pad, wrapDirections);
+                    
+                    // Much more varied initial states
+                    const startChoice = Math.random();
+                    let initialState;
+                    
+                    if (isEquationLevel() && startChoice < 0.15) {
+                        // Level 2: fewer fully safe pads at start.
+                        initialState = {
+                            scale: 1.0,
+                            shrinkStartTime: now + Math.random() * 1200,
+                            warningStartTime: null,
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else if (isEquationLevel() && startChoice < 0.32) {
+                        initialState = {
+                            scale: 1.0 - (Math.random() * WARNING_THRESHOLD),
+                            shrinkStartTime: now - (Math.random() * SHRINK_DURATION),
+                            warningStartTime: null,
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else if (isEquationLevel() && startChoice < 0.47) {
+                        initialState = {
+                            scale: WARNING_THRESHOLD,
+                            shrinkStartTime: null,
+                            warningStartTime: now - (Math.random() * WARNING_DURATION),
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else if (startChoice < 0.3) {
+                        // 30% chance: Start full size and fresh
+                        initialState = {
+                            scale: 1.0,
+                            shrinkStartTime: now + Math.random() * 2000, // Will start shrinking soon
+                            warningStartTime: null,
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else if (startChoice < 0.5) {
+                        // 20% chance: Start already shrinking (at random point)
+                        const randomProgress = Math.random();
+                        initialState = {
+                            scale: 1.0 - (randomProgress * WARNING_THRESHOLD),
+                            shrinkStartTime: now - (randomProgress * SHRINK_DURATION),
+                            warningStartTime: null,
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else if (startChoice < 0.7) {
+                        // 20% chance: Start in warning phase
+                        const warningProgress = Math.random();
+                        initialState = {
+                            scale: WARNING_THRESHOLD,
+                            shrinkStartTime: null,
+                            warningStartTime: now - (warningProgress * WARNING_DURATION),
+                            respawnTime: null,
+                            isGone: false
+                        };
+                    } else {
+                        // Start gone, then respawn.
+                        const initialDelay = getCurrentRespawnDelayMs() + (Math.random() * getCurrentRespawnJitterMs() - (getCurrentRespawnJitterMs() / 2));
+                        initialState = {
+                            scale: 0,
+                            shrinkStartTime: null,
+                            warningStartTime: null,
+                            respawnTime: now + Math.max(1000, initialDelay),
+                            isGone: true
+                        };
+                    }
+                    
+                    lilyPads.push({ 
+                        row, 
+                        col, 
+                        element: pad,
+                        equationElement,
+                        equation: null,
+                        progressLabel: null,
+                        occupiedByItem: false,
+                        wrapDirections,
+                        ...initialState
+                    });
+                    
+                    // Set initial visual state
+                    if (initialState.isGone) {
+                        pad.classList.add('gone');
+                        pad.style.transform = 'scale(0)';
+                    } else if (initialState.warningStartTime !== null) {
+                        pad.classList.add('warning');
+                        pad.style.transform = `scale(${WARNING_THRESHOLD})`;
+                    } else {
+                        pad.style.transform = `scale(${initialState.scale})`;
+                    }
+                }
+            }
+
+            lilyPads.forEach((padObj) => applyPadEquation(padObj));
+            refreshEquationVisibility();
+            
+            // Make sure frog's starting pad is safe
+            const frogPad = lilyPads.find(p => p.row === 2 && p.col === 2);
+            frogPad.scale = 1.0;
+            frogPad.shrinkStartTime = now + 3000; // Give player 3 seconds
+            frogPad.warningStartTime = null;
+            frogPad.respawnTime = null;
+            frogPad.isGone = false;
+            if (isEquationLevel() && frogPad.equation && frogPad.equation.isBad) {
+                frogPad.equation.isBad = false;
+                frogPad.equation.shown = frogPad.equation.correct;
+                frogPad.equation.text = frogPad.equation.correctText;
+                frogPad.equationElement.textContent = frogPad.equation.text;
+            }
+            frogPad.element.classList.remove('gone', 'warning');
+            frogPad.element.style.transform = 'scale(1)';
+            
+            updateFrogPosition();
+            
+            gameActive = true;
+            if (!keepScore) startTime = Date.now();
+            if (isSurvivalLevel()) {
+                survivalScoreBase = score;
+                startTime = Date.now();
+            }
+            speedMultiplier = 1.0;
+            if (!keepRunStats) {
+                fliesEaten = 0;
+                swordsFound = 0;
+                equationsSolved = 0;
+            }
+            document.getElementById('score').textContent = score;
+            document.getElementById('flyCount').textContent = fliesEaten;
+            document.getElementById('swordCount').textContent = swordsFound;
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('nameInputSection').classList.remove('show');
+            
+            // Start background music
+            startBackgroundMusic();
+
+            // Spawn first fly after delay and run all ticking loops.
+            flyPosition = null;
+            startGameLoops();
+        }
+
+        function updateGame() {
+            if (!gameActive || isPaused) return;
+            
+            const now = Date.now();
+            let frogPadGone = false;
+            
+            for (let pad of lilyPads) {
+                if (pad.respawnTime !== null) {
+                    if (now >= pad.respawnTime) {
+                        pad.respawnTime = null;
+                        pad.shrinkStartTime = now + Math.random() * 3000; // Random delay before shrinking starts (0-3 seconds)
+                        pad.warningStartTime = null;
+                        pad.scale = 1.0;
+                        pad.isGone = false;
+                        applyPadEquation(pad);
+                        refreshEquationVisibility();
+                        pad.element.classList.remove('gone', 'warning');
+                        pad.element.style.transform = 'scale(1)';
+                    }
+                    continue;
+                }
+                
+                if (pad.warningStartTime !== null) {
+                    const warningElapsed = now - pad.warningStartTime;
+                    const adjustedWarningDuration = WARNING_DURATION * speedMultiplier * getCurrentShrinkSlowdown();
+                    
+                    if (warningElapsed >= adjustedWarningDuration) {
+                        forcePadGone(pad, now);
+                        
+                        if (pad.row === frogPosition.row && pad.col === frogPosition.col) {
+                            frogPadGone = true;
+                        }
+                    }
+                    continue;
+                }
+                
+                if (pad.shrinkStartTime !== null) {
+                    const elapsed = now - pad.shrinkStartTime;
+                    const adjustedShrinkDuration = SHRINK_DURATION * speedMultiplier * getCurrentShrinkSlowdown();
+                    const progress = elapsed / adjustedShrinkDuration;
+                    
+                    if (progress >= 1.0) {
+                        pad.scale = WARNING_THRESHOLD;
+                        pad.element.style.transform = `scale(${WARNING_THRESHOLD})`;
+                        pad.element.classList.add('warning');
+                        pad.warningStartTime = now;
+                    } else {
+                        pad.scale = 1.0 - (progress * WARNING_THRESHOLD);
+                        pad.element.style.transform = `scale(${pad.scale})`;
+                    }
+                }
+            }
+
+            enforceLevelTwoPadCap(now);
+
+            if (swordPosition) {
+                const swordPad = lilyPads.find(p => p.row === swordPosition.row && p.col === swordPosition.col);
+                if (!swordPad || swordPad.isGone || swordPad.respawnTime !== null || swordPad.scale <= 0) {
+                    clearSword();
+                }
+            }
+
+            // If invincibility expired while standing on no/invalid pad, trigger failure now.
+            const currentPadState = lilyPads.find(p =>
+                p.row === frogPosition.row && p.col === frogPosition.col
+            );
+            const invalidCurrentPad = !currentPadState || currentPadState.isGone || currentPadState.scale === 0 || currentPadState.respawnTime !== null;
+            if (invalidCurrentPad && !isInvincible()) {
+                frogPadGone = true;
+            }
+            
+            // Update frog's image based on current leaf size
+            const currentPad = lilyPads.find(p => 
+                p.row === frogPosition.row && p.col === frogPosition.col
+            );
+            if (currentPad) {
+                const frogImg = document.querySelector('.frog img');
+                if (frogImg) {
+                    // Switch between happy and sad frog images
+                    if (currentPad.warningStartTime !== null || currentPad.scale <= 0.6) {
+                        if (frogImg.src !== SAD_FROG_IMG) {
+                            frogImg.src = SAD_FROG_IMG;
+                        }
+                    } else {
+                        if (frogImg.src !== HAPPY_FROG_IMG) {
+                            frogImg.src = HAPPY_FROG_IMG;
+                        }
+                    }
+                }
+            }
+            
+            if (frogPadGone) {
+                if (isInvincible()) {
+                    updateFrogPosition();
+                } else {
+                    startPredatorSequence(frogPosition.row, frogPosition.col);
+                }
+            }
+
+            applyFrogInvincibleVisual();
+        }
+
+        function updateFrogPosition() {
+            const existingFrog = document.querySelector('.frog');
+            if (existingFrog) existingFrog.remove();
+            
+            const currentPad = lilyPads.find(p => 
+                p.row === frogPosition.row && p.col === frogPosition.col
+            );
+
+            const canStandOnPad = currentPad && !currentPad.isGone && currentPad.scale > 0 && currentPad.respawnTime === null;
+
+            if (canStandOnPad) {
+                const frog = document.createElement('div');
+                frog.className = 'frog';
+
+                const frogImg = document.createElement('img');
+                frogImg.src = HAPPY_FROG_IMG;
+                frogImg.alt = 'Frog';
+                frog.appendChild(frogImg);
+                
+                currentPad.element.appendChild(frog);
+            } else {
+                showFrogOnEmpty(frogPosition.row, frogPosition.col, false);
+            }
+
+            applyFrogInvincibleVisual();
+        }
+
+        function showFrogOnEmpty(row, col, sinking = true) {
+            const existingFrog = document.querySelector('.frog');
+            if (existingFrog) existingFrog.remove();
+            
+            const pond = document.getElementById('pond');
+            if (!pond) return;
+            
+            const frog = document.createElement('div');
+            frog.className = sinking ? 'frog sinking' : 'frog';
+            
+            const frogImg = document.createElement('img');
+            frogImg.src = HAPPY_FROG_IMG;
+            frogImg.alt = 'Frog';
+            frog.appendChild(frogImg);
+            
+            // Compute cell position from grid geometry (CSS uses 5% padding and 2% gaps)
+            const rect = pond.getBoundingClientRect();
+            const padX = rect.width * 0.05;
+            const padY = rect.height * 0.05;
+            const gapX = rect.width * 0.02;
+            const gapY = rect.height * 0.02;
+            
+            const cellWidth = (rect.width - padX * 2 - gapX * (GRID_SIZE - 1)) / GRID_SIZE;
+            const cellHeight = (rect.height - padY * 2 - gapY * (GRID_SIZE - 1)) / GRID_SIZE;
+            
+            const safeRow = Number.isFinite(row) ? row : frogPosition.row;
+            const safeCol = Number.isFinite(col) ? col : frogPosition.col;
+            
+            const cellLeft = padX + safeCol * (cellWidth + gapX);
+            const cellTop = padY + safeRow * (cellHeight + gapY);
+            
+            const frogWidth = cellWidth * 0.8;
+            const frogHeight = cellHeight * 0.65;
+            const frogLeft = cellLeft + (cellWidth - frogWidth) / 2;
+            const frogTop = cellTop + (cellHeight - frogHeight) / 2;
+            
+            frog.style.width = frogWidth + 'px';
+            frog.style.height = frogHeight + 'px';
+            frog.style.left = frogLeft + 'px';
+            frog.style.top = frogTop + 'px';
+            frog.style.position = 'absolute';
+            
+            pond.appendChild(frog);
+            if (sinking) {
+                predatorFrog = frog;
+            }
+
+            applyFrogInvincibleVisual();
+        }
+
+        function startPredatorSequence(row = frogPosition.row, col = frogPosition.col, options = {}) {
+            const forceStart = options.forceStart === true;
+            const removeKillerPad = options.removeKillerPad === true;
+            if (!gameActive && !forceStart) return;
+            const skipRescuePrompt = options.skipRescuePrompt === true;
+            if (currentLevel === 1 && !skipRescuePrompt && !rescuePromptUsed) {
+                promptRescueChoice(row, col);
+                return;
+            }
+
+            if (removeKillerPad) {
+                const killerPad = lilyPads.find(p => p.row === row && p.col === col);
+                if (killerPad) {
+                    killerPad.scale = 0;
+                    killerPad.isGone = true;
+                    killerPad.respawnTime = null;
+                    killerPad.shrinkStartTime = null;
+                    killerPad.warningStartTime = null;
+                    killerPad.equation = null;
+                    killerPad.progressLabel = null;
+                    if (killerPad.equationElement) {
+                        killerPad.equationElement.textContent = '';
+                        killerPad.equationElement.style.display = 'none';
+                    }
+                    killerPad.element.classList.add('gone');
+                    killerPad.element.classList.remove('warning');
+                    killerPad.element.style.transform = 'scale(0)';
+                }
+            }
+
+            showFrogOnEmpty(row, col, true);
+            if (predatorFrog) {
+                predatorFrog.addEventListener('animationend', () => {
+                    if (!predatorTimeout) return;
+                    const eyesNow = document.getElementById('pikeEyes');
+                    if (eyesNow) eyesNow.style.animationPlayState = 'paused';
+                    clearTimeout(predatorTimeout);
+                    predatorTimeout = null;
+                    endGame();
+                }, { once: true });
+            }
+            gameActive = false;
+            isPaused = false;
+            clearGameLoops();
+            clearSword();
+            invincibleUntil = 0;
+            setPauseButtonState('Pause', true);
+            
+            // Stop background music
+            stopBackgroundMusic();
+
+            // Crowd "ohhh" sound
+            ensureAudioContext();
+            if (audioContext && audioContext.state === 'running') {
+                playCrowdOhhSound();
+            } else {
+                pendingPredatorSound = true;
+            }
+            // Try again shortly in case resume takes a moment (Edge quirk)
+            setTimeout(() => {
+                if (audioContext && audioContext.state === 'running') {
+                    playCrowdOhhSound();
+                    pendingPredatorSound = false;
+                }
+            }, 60);
+            
+            // Remove any fly
+            clearFly();
+            
+            const eyes = document.getElementById('pikeEyes');
+            if (eyes) {
+                if (predatorFrog) {
+                    const pond = document.getElementById('pond');
+                    const pondRect = pond.getBoundingClientRect();
+                    const frogRect = predatorFrog.getBoundingClientRect();
+                    const centerX = frogRect.left - pondRect.left + frogRect.width / 2;
+                    const centerY = frogRect.top - pondRect.top + frogRect.height / 2;
+                    eyes.style.left = centerX + 'px';
+                    // Lower monster path slightly (~0.7 cm total on most phone screens).
+                    eyes.style.top = (centerY - 43) + 'px';
+                }
+                // Restart animation if it was running
+                eyes.classList.remove('show');
+                eyes.style.animationPlayState = 'running';
+                void eyes.offsetWidth;
+                eyes.classList.add('show');
+            }
+            
+            predatorTimeout = setTimeout(() => {
+                if (predatorFrog) {
+                    predatorFrog.remove();
+                    predatorFrog = null;
+                }
+                if (eyes) eyes.classList.remove('show');
+                endGame();
+            }, PREDATOR_DURATION);
+        }
+
+        function moveFrog(deltaRow, deltaCol) {
+            if (!gameActive || isPaused) return;
+            
+            let newRow = frogPosition.row + deltaRow;
+            let newCol = frogPosition.col + deltaCol;
+
+            const movedOutOfBounds = newRow < 0 || newRow >= GRID_SIZE || newCol < 0 || newCol >= GRID_SIZE;
+            if (movedOutOfBounds) {
+                const currentPad = lilyPads.find(p => p.row === frogPosition.row && p.col === frogPosition.col);
+                let neededDirection = null;
+                if (deltaRow === -1) neededDirection = 'up';
+                if (deltaRow === 1) neededDirection = 'down';
+                if (deltaCol === -1) neededDirection = 'left';
+                if (deltaCol === 1) neededDirection = 'right';
+
+                if (!currentPad || !neededDirection || !currentPad.wrapDirections || !currentPad.wrapDirections.includes(neededDirection)) {
+                    return;
+                }
+
+                if (neededDirection === 'up') newRow = GRID_SIZE - 1;
+                if (neededDirection === 'down') newRow = 0;
+                if (neededDirection === 'left') newCol = GRID_SIZE - 1;
+                if (neededDirection === 'right') newCol = 0;
+            }
+            
+            const targetPad = lilyPads.find(p => p.row === newRow && p.col === newCol);
+
+            const targetInvalid = !targetPad || targetPad.isGone || targetPad.scale === 0 || targetPad.respawnTime !== null;
+
+            if (targetInvalid) {
+                frogPosition.row = newRow;
+                frogPosition.col = newCol;
+
+                if (isInvincible()) {
+                    updateFrogPosition();
+                    playJumpSound();
+                    if (swordPosition && swordPosition.row === newRow && swordPosition.col === newCol) {
+                        collectSword();
+                    }
+                } else {
+                    startPredatorSequence(newRow, newCol);
+                }
+                return;
+            }
+            
+            if (targetPad && !targetPad.isGone && targetPad.scale > 0) {
+                frogPosition.row = newRow;
+                frogPosition.col = newCol;
+
+                const occupiedByFly = !!flyPosition && flyPosition.row === newRow && flyPosition.col === newCol;
+                const occupiedBySword = !!swordPosition && swordPosition.row === newRow && swordPosition.col === newCol;
+                const isOccupiedPowerPad = occupiedByFly || occupiedBySword;
+                const invincibleNow = isInvincible();
+
+                if (isEquationLevel()) {
+                    const padKey = getPadKey(newRow, newCol);
+                    const equationId = targetPad.equation ? targetPad.equation.id : null;
+                    const goodEquation = !!targetPad.equation && !targetPad.equation.isBad;
+                    const alreadyScored = equationId !== null && scoredEquationIds.has(equationId);
+
+                    if (goodEquation && !alreadyScored) {
+                        scoredEquationIds.add(equationId);
+                        levelTwoGoodCount += 1;
+                        equationsSolved += 1;
+                        score += LEVEL_TWO_LEAF_POINTS;
+                        document.getElementById('score').textContent = score;
+
+                        if (levelTwoLastPadKey !== null) {
+                            setPadProgressLabelByKey(levelTwoLastPadKey, levelTwoGoodCount - 1);
+                        }
+                        levelTwoLastPadKey = padKey;
+
+                        if (levelTwoGoodCount >= LEVEL_TWO_GOAL_POINTS) {
+                            startLevelThreeFromRescue();
+                            return;
+                        }
+                    }
+                }
+
+                if (isEquationLevel() && targetPad.equation && targetPad.equation.isBad && !invincibleNow && !isOccupiedPowerPad) {
+                    triggerBadEquationFailure(newRow, newCol, targetPad.equation);
+                    return;
+                }
+
+                updateFrogPosition();
+                playJumpSound(); // Play sound on successful jump
+                
+                // Check if we landed on a fly
+                if (flyPosition && flyPosition.row === newRow && flyPosition.col === newCol) {
+                    eatFly();
+                }
+
+                if (swordPosition && swordPosition.row === newRow && swordPosition.col === newCol) {
+                    collectSword();
+                }
+            }
+        }
+
+        function updateTime() {
+            if (!gameActive || isPaused) return;
+            if (dailyGameCountDayKey && dailyGameCountDayKey !== getTodayDateKey()) {
+                syncDailyGameCount();
+            }
+            if (isSurvivalLevel()) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                score = survivalScoreBase + elapsed;
+                document.getElementById('score').textContent = score;
+            }
+        }
+
+        function endGame() {
+            if (predatorTimeout) {
+                clearTimeout(predatorTimeout);
+                predatorTimeout = null;
+            }
+            clearRescueDramaTimeout();
+            clearLevelTransitionTimers();
+            hideLevelOverlay();
+            pendingEquationFailure = null;
+            clearPredatorVisuals();
+            
+            gameActive = false;
+            isPaused = false;
+            clearGameLoops();
+            clearSword();
+            invincibleUntil = 0;
+            setPauseButtonState('Pause', true);
+            
+            // Stop background music
+            stopBackgroundMusic();
+            
+            // Remove any fly
+            const existingFly = document.querySelector('.fly');
+            if (existingFly) existingFly.remove();
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalFlies').textContent = fliesEaten;
+            document.getElementById('finalSwords').textContent = swordsFound;
+            document.getElementById('finalEquations').textContent = equationsSolved;
+            
+            // Check if it's a top 5 score
+            setTimeout(() => {
+                if (isTopScore(score)) {
+                    document.getElementById('nameInputSection').classList.add('show');
+                    displayLeaderboard();
+                } else {
+                    displayLeaderboard();
+                }
+                
+                document.getElementById('gameOver').classList.add('show');
+            }, 600); // Delay showing game over screen to let sad sound play
+        }
+
+        function restartGame() {
+            clearGameLoops();
+            hideLevelOverlay();
+            document.getElementById('nameInputSection').classList.remove('show');
+            document.getElementById('playerName').value = '';
+            initGame({ level: 1, keepScore: false, keepRunStats: false });
+            // Force an immediate start attempt inside the Play Again click gesture.
+            startBackgroundMusic();
+        }
+
+        function unlockAudioAndMaybeStartMusic() {
+            ensureAudioContext();
+            // Background music is HTML audio and should not depend on WebAudio state.
+            if (gameActive && !isPaused && (!musicStarted || pendingStartMusic)) {
+                startBackgroundMusic();
+            }
+
+            if (audioContext && audioContext.state === 'running' && pendingPredatorSound) {
+                playPredatorRiseSound();
+                pendingPredatorSound = false;
+            }
+        }
+
+        function handleDirectionalInput(direction) {
+            if (!gameActive || isPaused) return;
+            if (!musicStarted || pendingStartMusic) {
+                startBackgroundMusic();
+            }
+            switch(direction) {
+                case 'up':
+                    moveFrog(-1, 0);
+                    break;
+                case 'down':
+                    moveFrog(1, 0);
+                    break;
+                case 'left':
+                    moveFrog(0, -1);
+                    break;
+                case 'right':
+                    moveFrog(0, 1);
+                    break;
+            }
+        }
+
+        function bindSwipeControls() {
+            const pond = document.getElementById('pond');
+            const swipeZone = document.getElementById('swipeZone');
+            if (!pond && !swipeZone) return;
+
+            const minSwipeDistance = 26;
+
+            const attachSwipeTarget = (target) => {
+                if (!target) return;
+
+                let startX = 0;
+                let startY = 0;
+
+                target.addEventListener('touchstart', (e) => {
+                    if (!e.changedTouches || e.changedTouches.length === 0) return;
+                    const t = e.changedTouches[0];
+                    startX = t.clientX;
+                    startY = t.clientY;
+                }, { passive: true });
+
+                target.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                }, { passive: false });
+
+                target.addEventListener('touchend', (e) => {
+                    if (!e.changedTouches || e.changedTouches.length === 0) return;
+                    const t = e.changedTouches[0];
+                    const dx = t.clientX - startX;
+                    const dy = t.clientY - startY;
+                    const absX = Math.abs(dx);
+                    const absY = Math.abs(dy);
+
+                    if (absX < minSwipeDistance && absY < minSwipeDistance) return;
+
+                    unlockAudioAndMaybeStartMusic();
+
+                    if (absX > absY) {
+                        handleDirectionalInput(dx > 0 ? 'right' : 'left');
+                    } else {
+                        handleDirectionalInput(dy > 0 ? 'down' : 'up');
+                    }
+                }, { passive: true });
+            };
+
+            attachSwipeTarget(pond);
+            attachSwipeTarget(swipeZone);
+        }
+        
+        document.addEventListener('pointerdown', () => {
+            unlockAudioAndMaybeStartMusic();
+        }, { passive: true });
+        
+        document.addEventListener('keydown', (e) => {
+            unlockAudioAndMaybeStartMusic();
+            if (!gameActive) return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    handleDirectionalInput('up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    handleDirectionalInput('down');
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    handleDirectionalInput('left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    handleDirectionalInput('right');
+                    break;
+            }
+        });
+
+        // Allow Enter key to submit name
+        document.getElementById('playerName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitScore();
+            }
+        });
+
+        const prefersTouchControls =
+            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+            ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+            window.innerWidth <= 900;
+
+        if (prefersTouchControls) {
+            document.body.classList.add('touch-input');
+            bindSwipeControls();
+            document.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+        }
+
+        initGame({ level: 1, keepScore: false, keepRunStats: false });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="sergyten123" data-color="#40DCA5" data-emoji="" data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
