@@ -32,6 +32,14 @@
             width: min(1200px, 100%);
         }
 
+        .desktop-only {
+            display: block;
+        }
+
+        .mobile-only {
+            display: none;
+        }
+
         .game-container {
             position: relative;
             width: 84vmin;
@@ -72,7 +80,7 @@
             position: relative;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 35%, #f7b3c8, #e06a9f);
-            transition: transform 0.1s linear, background 0.3s ease;
+            transition: background 0.3s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: center;
@@ -121,6 +129,7 @@
             z-index: 5;
             text-align: center;
             line-height: 1;
+            padding: 0 14%;
         }
 
         .level-banner {
@@ -187,6 +196,82 @@
         .overlay-choice-btn.secondary {
             background: #546e7a;
             margin-left: 8px;
+        }
+
+        .level-overlay-card.celebration {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(255, 253, 232, 0.98), rgba(235, 255, 245, 0.98));
+            border: 2px solid rgba(255, 205, 80, 0.85);
+            box-shadow:
+                0 16px 38px rgba(0, 0, 0, 0.38),
+                0 0 22px rgba(255, 220, 120, 0.7);
+            animation: celebrationPulse 900ms ease-in-out infinite alternate;
+        }
+
+        .celebration-title {
+            display: block;
+            font-size: 30px;
+            line-height: 1.1;
+            color: #1f7a1f;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .celebration-subtitle {
+            display: block;
+            font-size: 19px;
+            color: #1d2b38;
+        }
+
+        .celebration-confetti {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .celebration-confetti span {
+            position: absolute;
+            top: -12px;
+            width: 9px;
+            height: 16px;
+            border-radius: 2px;
+            opacity: 0.9;
+            animation: confettiFall linear infinite;
+        }
+
+        .celebration-confetti span:nth-child(1) { left: 8%;  background: #ff5d8f; animation-duration: 1.6s; animation-delay: 0.0s; }
+        .celebration-confetti span:nth-child(2) { left: 18%; background: #ffd54f; animation-duration: 1.9s; animation-delay: 0.3s; }
+        .celebration-confetti span:nth-child(3) { left: 31%; background: #42a5f5; animation-duration: 1.5s; animation-delay: 0.1s; }
+        .celebration-confetti span:nth-child(4) { left: 44%; background: #66bb6a; animation-duration: 2.0s; animation-delay: 0.4s; }
+        .celebration-confetti span:nth-child(5) { left: 58%; background: #ab47bc; animation-duration: 1.7s; animation-delay: 0.2s; }
+        .celebration-confetti span:nth-child(6) { left: 72%; background: #ffa726; animation-duration: 1.8s; animation-delay: 0.5s; }
+        .celebration-confetti span:nth-child(7) { left: 84%; background: #26c6da; animation-duration: 1.55s; animation-delay: 0.15s; }
+        .celebration-confetti span:nth-child(8) { left: 92%; background: #ef5350; animation-duration: 1.85s; animation-delay: 0.45s; }
+
+        .celebration-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(340px) rotate(300deg);
+            }
+        }
+
+        @keyframes celebrationPulse {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.02);
+            }
         }
 
         .wrap-arrow {
@@ -644,6 +729,237 @@
             -webkit-touch-callout: none;
         }
 
+        body.desktop-layout .game-wrapper {
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.desktop-layout .ui {
+            min-width: 200px;
+            max-width: 280px;
+            padding: 16px;
+            gap: 10px;
+        }
+
+        body.desktop-layout .game-container {
+            width: 84vmin;
+            height: 84vmin;
+            max-width: 680px;
+            max-height: 680px;
+        }
+
+        body.desktop-layout .swipe-zone {
+            display: none;
+        }
+
+        body.ipad-layout {
+            padding: 10px 10px;
+            overflow-x: hidden;
+            align-items: flex-start;
+        }
+
+        body.ipad-layout .desktop-only {
+            display: none !important;
+        }
+
+        body.ipad-layout .mobile-only {
+            display: block !important;
+        }
+
+        body.ipad-layout .game-wrapper {
+            display: grid;
+            grid-template-columns: minmax(220px, 320px) minmax(520px, 1fr);
+            grid-template-areas:
+                "hud board"
+                "swipe board";
+            justify-content: center;
+            align-items: start;
+            gap: 10px 12px;
+            width: min(1200px, 100%);
+        }
+
+        body.ipad-layout .ui {
+            grid-area: hud;
+            width: 100%;
+            max-width: 320px;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        body.ipad-layout .game-container {
+            grid-area: board;
+            width: min(66vw, 72vh);
+            height: min(66vw, 72vh);
+            max-width: 760px;
+            max-height: 760px;
+        }
+
+        body.ipad-layout .swipe-zone {
+            grid-area: swipe;
+            width: 100%;
+            max-width: 320px;
+            min-height: 66px;
+            margin: 0;
+            font-size: clamp(18px, 2.2vw, 26px);
+            line-height: 1.1;
+        }
+
+        body.ipad-layout .score,
+        body.ipad-layout .time,
+        body.ipad-layout .flies,
+        body.ipad-layout .swords {
+            font-size: 18px;
+        }
+
+        body.ipad-layout .instructions {
+            font-size: 12px;
+            margin-top: 8px !important;
+            padding: 8px 10px !important;
+        }
+
+        body.ipad-layout .equation-text {
+            font-size: clamp(9px, 1.8vmin, 14px);
+            padding: 0 16%;
+        }
+
+        body.ipad-layout .wrap-arrow.up,
+        body.ipad-layout .wrap-arrow.down {
+            border-left-width: 6px;
+            border-right-width: 6px;
+        }
+
+        body.ipad-layout .wrap-arrow.up {
+            top: 4.5%;
+            border-bottom-width: 9px;
+        }
+
+        body.ipad-layout .wrap-arrow.down {
+            bottom: 4.5%;
+            border-top-width: 9px;
+        }
+
+        body.ipad-layout .wrap-arrow.left,
+        body.ipad-layout .wrap-arrow.right {
+            border-top-width: 6px;
+            border-bottom-width: 6px;
+        }
+
+        body.ipad-layout .wrap-arrow.left {
+            left: 4.5%;
+            border-right-width: 9px;
+        }
+
+        body.ipad-layout .wrap-arrow.right {
+            right: 4.5%;
+            border-left-width: 9px;
+        }
+
+        body.mobile-layout {
+            padding: 8px 6px;
+            overflow-x: hidden;
+            align-items: flex-start;
+        }
+
+        body.mobile-layout .desktop-only {
+            display: none !important;
+        }
+
+        body.mobile-layout .mobile-only {
+            display: block !important;
+        }
+
+        body.mobile-layout .game-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-areas:
+                "hud"
+                "board"
+                "swipe";
+            justify-items: center;
+            align-items: start;
+            gap: 8px;
+            width: 100%;
+            max-width: 100vw;
+            padding-inline: 2px;
+        }
+
+        body.mobile-layout .ui {
+            grid-area: hud;
+            width: min(96vw, 640px);
+            max-width: min(96vw, 640px);
+            padding: 10px 12px;
+            gap: 8px;
+        }
+
+        body.mobile-layout .game-container {
+            grid-area: board;
+            width: min(94vw, 64vh);
+            height: min(94vw, 64vh);
+            max-width: none;
+            max-height: none;
+        }
+
+        body.mobile-layout .swipe-zone {
+            grid-area: swipe;
+            display: flex;
+            width: min(94vw, 640px);
+            min-height: 64px;
+            margin: 0 auto;
+            font-size: clamp(19px, 4.8vw, 30px);
+            line-height: 1.1;
+        }
+
+        body.mobile-layout .score,
+        body.mobile-layout .time,
+        body.mobile-layout .flies,
+        body.mobile-layout .swords {
+            font-size: 18px;
+        }
+
+        body.mobile-layout .instructions {
+            font-size: 12px;
+            margin-top: 8px !important;
+            padding: 8px 10px !important;
+        }
+
+        body.mobile-layout .equation-text {
+            font-size: clamp(9px, 1.7vmin, 13px);
+            padding: 0 18%;
+        }
+
+        body.mobile-layout .wrap-arrow.up,
+        body.mobile-layout .wrap-arrow.down {
+            border-left-width: 5px;
+            border-right-width: 5px;
+        }
+
+        body.mobile-layout .wrap-arrow.up {
+            top: 4%;
+            border-bottom-width: 8px;
+        }
+
+        body.mobile-layout .wrap-arrow.down {
+            bottom: 4%;
+            border-top-width: 8px;
+        }
+
+        body.mobile-layout .wrap-arrow.left,
+        body.mobile-layout .wrap-arrow.right {
+            border-top-width: 5px;
+            border-bottom-width: 5px;
+        }
+
+        body.mobile-layout .wrap-arrow.left {
+            left: 4%;
+            border-right-width: 8px;
+        }
+
+        body.mobile-layout .wrap-arrow.right {
+            right: 4%;
+            border-left-width: 8px;
+        }
+
         body.touch-input .swipe-zone {
             display: flex;
         }
@@ -993,6 +1309,7 @@
         @media (max-width: 900px) {
             body {
                 padding: 8px;
+                overflow-x: hidden;
             }
 
             .game-wrapper {
@@ -1000,11 +1317,13 @@
                 align-items: center;
                 gap: 8px;
                 width: 100%;
+                max-width: 100vw;
+                padding-inline: 2px;
             }
 
             .game-container {
-                width: min(92vw, 92vh);
-                height: min(92vw, 92vh);
+                width: min(94vw, 64vh);
+                height: min(94vw, 64vh);
                 max-width: none;
                 max-height: none;
             }
@@ -1040,6 +1359,43 @@
                 width: min(94vw, 640px);
             }
 
+            .equation-text {
+                font-size: clamp(9px, 1.7vmin, 13px);
+                padding: 0 18%;
+            }
+
+            .wrap-arrow.up,
+            .wrap-arrow.down {
+                border-left-width: 5px;
+                border-right-width: 5px;
+            }
+
+            .wrap-arrow.up {
+                top: 4%;
+                border-bottom-width: 8px;
+            }
+
+            .wrap-arrow.down {
+                bottom: 4%;
+                border-top-width: 8px;
+            }
+
+            .wrap-arrow.left,
+            .wrap-arrow.right {
+                border-top-width: 5px;
+                border-bottom-width: 5px;
+            }
+
+            .wrap-arrow.left {
+                left: 4%;
+                border-right-width: 8px;
+            }
+
+            .wrap-arrow.right {
+                right: 4%;
+                border-left-width: 8px;
+            }
+
             .name-input-section input {
                 width: 100%;
                 margin-right: 0;
@@ -1072,13 +1428,20 @@
                 <div class="swords hud-stat"><span class="stat-label">Swords (+20)</span><span id="swordCount" class="stat-count">0</span><svg class="stat-icon" width="48" height="48" viewBox="0 0 64 64"><rect x="29" y="6" width="6" height="30" rx="2" fill="#8ea4b8" stroke="#5b6f82" stroke-width="0.8"/><rect x="30" y="8" width="2" height="26" fill="#c7d5e2"/><rect x="24" y="32" width="16" height="5" rx="2" fill="#5cf2ff"/><rect x="27" y="37" width="10" height="4" rx="2" fill="#9d7bff"/><rect x="30" y="41" width="4" height="11" rx="1.5" fill="#4a2e9b"/><rect x="27" y="50" width="10" height="5" rx="2" fill="#ffd34d"/></svg></div>
             </div>
             <button class="pause-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
-            <div class="instructions" style="margin-top: 20px; padding: 15px; background: #f0f0f0;">
+            <div class="instructions desktop-only" style="margin-top: 20px; padding: 15px; background: #f0f0f0;">
                 <strong>Controls:</strong><br>
                 Arrow Keys to move 🐸<br>
                 Avoid red leaves!<br>
                 Catch flies (+5) and invincibility<br>
                 swords (+20)!<br>
                 Rescue Mode: collect 50 correct equations and avoid bad equations.
+            </div>
+            <div class="instructions mobile-only" style="margin-top: 20px; padding: 15px; background: #f0f0f0;">
+                <strong>Touch Controls:</strong><br>
+                Swipe on board or swipe zone to move 🐸<br>
+                Avoid red leaves and wrong equations.<br>
+                Catch flies (+5) and swords (+20).<br>
+                Goal: 50 correct equations in Rescue Mode.
             </div>
         </div>
         
@@ -1657,17 +2020,23 @@
             }
         }
 
-        function showLevelOverlay(html) {
+        function showLevelOverlay(html, options = {}) {
             const overlay = document.getElementById('levelOverlay');
             const overlayText = document.getElementById('levelOverlayText');
             if (!overlay || !overlayText) return;
+            overlayText.classList.remove('celebration');
+            if (options.cardClassName) {
+                overlayText.classList.add(options.cardClassName);
+            }
             overlayText.innerHTML = html;
             overlay.classList.add('show');
         }
 
         function hideLevelOverlay() {
             const overlay = document.getElementById('levelOverlay');
+            const overlayText = document.getElementById('levelOverlayText');
             if (!overlay) return;
+            if (overlayText) overlayText.classList.remove('celebration');
             overlay.classList.remove('show');
         }
 
@@ -2010,10 +2379,16 @@
             setPauseButtonState('Pause', true);
 
             showLevelOverlay(
-                `You saved the frog!<br>` +
-                `+${LEVEL_TWO_GOAL_POINTS} points earned.<br>` +
-                `Starting Level 3...<br><br>` +
-                `<button id="startLevelThreeBtn" class="overlay-choice-btn primary">Continue</button>`
+                `<div class="celebration-confetti">` +
+                `<span></span><span></span><span></span><span></span>` +
+                `<span></span><span></span><span></span><span></span>` +
+                `</div>` +
+                `<div class="celebration-content">` +
+                `<span class="celebration-title">Congratulations!</span>` +
+                `<span class="celebration-subtitle">Congratulations, your frog is saved. Click Ok to continue game.</span><br>` +
+                `<button id="startLevelThreeBtn" class="overlay-choice-btn primary">Ok</button>` +
+                `</div>`,
+                { cardClassName: 'celebration' }
             );
 
             const continueBtn = document.getElementById('startLevelThreeBtn');
@@ -2743,6 +3118,11 @@
                 
                 if (pad.shrinkStartTime !== null) {
                     const elapsed = now - pad.shrinkStartTime;
+                    if (elapsed <= 0) {
+                        pad.scale = 1.0;
+                        pad.element.style.transform = 'scale(1)';
+                        continue;
+                    }
                     const adjustedShrinkDuration = SHRINK_DURATION * speedMultiplier * getCurrentShrinkSlowdown();
                     const progress = elapsed / adjustedShrinkDuration;
                     
@@ -3042,21 +3422,23 @@
                     const goodEquation = !!targetPad.equation && !targetPad.equation.isBad;
                     const alreadyScored = equationId !== null && scoredEquationIds.has(equationId);
 
-                    if (goodEquation && !alreadyScored) {
-                        scoredEquationIds.add(equationId);
-                        levelTwoGoodCount += 1;
-                        equationsSolved += 1;
-                        score += LEVEL_TWO_LEAF_POINTS;
-                        document.getElementById('score').textContent = score;
+                    if (goodEquation) {
+                        if (!alreadyScored) {
+                            scoredEquationIds.add(equationId);
+                            levelTwoGoodCount += 1;
+                            equationsSolved += 1;
+                            score += LEVEL_TWO_LEAF_POINTS;
+                            document.getElementById('score').textContent = score;
+                            setPadProgressLabelByKey(padKey, levelTwoGoodCount);
+                            levelTwoLastPadKey = padKey;
 
-                        if (levelTwoLastPadKey !== null) {
-                            setPadProgressLabelByKey(levelTwoLastPadKey, levelTwoGoodCount - 1);
-                        }
-                        levelTwoLastPadKey = padKey;
-
-                        if (levelTwoGoodCount >= LEVEL_TWO_GOAL_POINTS) {
-                            startLevelThreeFromRescue();
-                            return;
+                            if (levelTwoGoodCount >= LEVEL_TWO_GOAL_POINTS) {
+                                startLevelThreeFromRescue();
+                                return;
+                            }
+                        } else if (targetPad.progressLabel !== null) {
+                            setPadProgressLabelByKey(padKey, targetPad.progressLabel);
+                            levelTwoLastPadKey = padKey;
                         }
                     }
                 }
@@ -3262,19 +3644,62 @@
             }
         });
 
-        const prefersTouchControls =
-            (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
-            ('ontouchstart' in window) ||
-            (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
-            window.innerWidth <= 900;
+        let swipeControlsBound = false;
 
-        if (prefersTouchControls) {
-            document.body.classList.add('touch-input');
-            bindSwipeControls();
-            document.addEventListener('dblclick', (e) => {
-                e.preventDefault();
-            }, { passive: false });
+        function canUseTouchInput() {
+            const coarsePointer = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+            return coarsePointer || ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
         }
+
+        function isIpadLikeDevice() {
+            const ua = navigator.userAgent || '';
+            const platform = navigator.platform || '';
+            const nativeIpad = /iPad/i.test(ua);
+            const ipadOsDesktopMode = platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+            if (nativeIpad || ipadOsDesktopMode) return true;
+            if (!canUseTouchInput()) return false;
+            const longEdge = Math.max(window.innerWidth, window.innerHeight);
+            const shortEdge = Math.min(window.innerWidth, window.innerHeight);
+            return longEdge >= 900 && longEdge <= 1400 && shortEdge >= 600;
+        }
+
+        function shouldUseMobileLayout() {
+            const touchCapable = canUseTouchInput();
+            const narrowViewport = window.innerWidth <= 1024;
+            const shortViewport = window.innerHeight <= 780;
+            return touchCapable && !isIpadLikeDevice() && (narrowViewport || shortViewport);
+        }
+
+        function applyDeviceLayout() {
+            const ipadLayout = isIpadLikeDevice();
+            const mobileLayout = !ipadLayout && shouldUseMobileLayout();
+            document.body.classList.toggle('ipad-layout', ipadLayout);
+            document.body.classList.toggle('mobile-layout', mobileLayout);
+            document.body.classList.toggle('desktop-layout', !ipadLayout && !mobileLayout);
+        }
+
+        function applyInputMode() {
+            const touchInput = canUseTouchInput();
+            document.body.classList.toggle('touch-input', touchInput);
+            if (touchInput && !swipeControlsBound) {
+                bindSwipeControls();
+                swipeControlsBound = true;
+            }
+        }
+
+        function updateDeviceMode() {
+            applyDeviceLayout();
+            applyInputMode();
+        }
+
+        updateDeviceMode();
+        window.addEventListener('resize', updateDeviceMode, { passive: true });
+        window.addEventListener('orientationchange', updateDeviceMode, { passive: true });
+
+        document.addEventListener('dblclick', (e) => {
+            if (!document.body.classList.contains('touch-input')) return;
+            e.preventDefault();
+        }, { passive: false });
 
         initGame({ level: 1, keepScore: false, keepRunStats: false });
     </script>
