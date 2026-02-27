@@ -2107,6 +2107,69 @@
             padObj.equationElement.style.display = 'flex';
         }
 
+        function forcePadToGoodEquation(padObj) {
+            if (!padObj || !padObj.equationElement) return;
+            let equation = null;
+            for (let i = 0; i < 20; i++) {
+                const candidate = generateEquationData();
+                if (!candidate.isBad) {
+                    equation = candidate;
+                    break;
+                }
+            }
+            if (!equation) {
+                equation = generateEquationData();
+                equation.isBad = false;
+                equation.shown = equation.correct;
+                equation.text = equation.correctText;
+            }
+            equation.id = nextEquationId++;
+            padObj.equation = equation;
+            padObj.equationElement.textContent = equation.text;
+            padObj.equationElement.style.display = 'flex';
+        }
+
+        function ensureLevelTwoOpeningMove(now) {
+            if (!isEquationLevel()) return;
+            const row = frogPosition.row;
+            const col = frogPosition.col;
+            const deltas = [
+                [-1, 0],
+                [1, 0],
+                [0, -1],
+                [0, 1],
+            ];
+
+            const neighbors = deltas
+                .map(([dr, dc]) => lilyPads.find((p) => p.row === row + dr && p.col === col + dc))
+                .filter(Boolean);
+
+            const hasSafeOpening = neighbors.some((pad) => (
+                !pad.isGone &&
+                pad.respawnTime === null &&
+                pad.scale > 0 &&
+                pad.equation &&
+                !pad.equation.isBad
+            ));
+            if (hasSafeOpening) return;
+            if (neighbors.length === 0) return;
+
+            const targetPad = randomChoice(neighbors);
+            targetPad.scale = 1.0;
+            targetPad.isGone = false;
+            targetPad.shrinkStartTime = now + 2500;
+            targetPad.warningStartTime = null;
+            targetPad.respawnTime = null;
+            targetPad.progressLabel = null;
+            targetPad.occupiedByItem = false;
+
+            targetPad.element.classList.remove('gone', 'warning', 'occupied-item');
+            targetPad.element.style.transform = 'scale(1)';
+
+            forcePadToGoodEquation(targetPad);
+            refreshEquationVisibility();
+        }
+
         function clearPadEquation(padObj) {
             if (!padObj || !padObj.equationElement) return;
             padObj.equation = null;
@@ -3051,6 +3114,8 @@
             }
             frogPad.element.classList.remove('gone', 'warning');
             frogPad.element.style.transform = 'scale(1)';
+
+            ensureLevelTwoOpeningMove(now);
             
             updateFrogPosition();
             
@@ -3418,27 +3483,20 @@
 
                 if (isEquationLevel()) {
                     const padKey = getPadKey(newRow, newCol);
-                    const equationId = targetPad.equation ? targetPad.equation.id : null;
                     const goodEquation = !!targetPad.equation && !targetPad.equation.isBad;
-                    const alreadyScored = equationId !== null && scoredEquationIds.has(equationId);
+                    const revisitedGoodLeaf = targetPad.progressLabel !== null;
 
-                    if (goodEquation) {
-                        if (!alreadyScored) {
-                            scoredEquationIds.add(equationId);
-                            levelTwoGoodCount += 1;
-                            equationsSolved += 1;
-                            score += LEVEL_TWO_LEAF_POINTS;
-                            document.getElementById('score').textContent = score;
-                            setPadProgressLabelByKey(padKey, levelTwoGoodCount);
-                            levelTwoLastPadKey = padKey;
+                    if (goodEquation || revisitedGoodLeaf) {
+                        levelTwoGoodCount += 1;
+                        equationsSolved += 1;
+                        score += LEVEL_TWO_LEAF_POINTS;
+                        document.getElementById('score').textContent = score;
+                        setPadProgressLabelByKey(padKey, levelTwoGoodCount);
+                        levelTwoLastPadKey = padKey;
 
-                            if (levelTwoGoodCount >= LEVEL_TWO_GOAL_POINTS) {
-                                startLevelThreeFromRescue();
-                                return;
-                            }
-                        } else if (targetPad.progressLabel !== null) {
-                            setPadProgressLabelByKey(padKey, targetPad.progressLabel);
-                            levelTwoLastPadKey = padKey;
+                        if (levelTwoGoodCount >= LEVEL_TWO_GOAL_POINTS) {
+                            startLevelThreeFromRescue();
+                            return;
                         }
                     }
                 }
